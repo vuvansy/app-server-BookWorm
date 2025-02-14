@@ -10,7 +10,24 @@ const getAllUserService = async ()=>{
     }
    
 }
+const createUserService = async(userData)=>{
+    try {
+        let result = await userModel.create({
+            fullName: userData.fullName,
+            phone: userData.phone,
+            email: userData.email,
+            role: userData.role,
+            address: userData.address,
+            image: userData.image,
+            password: userData.password
+        })
+        return result;
+    } catch (error) {
+        console.log(error);
+        return null;
+    }
+}
 
 module.exports = {
-    getAllUserService
+    getAllUserService, createUserService
 }

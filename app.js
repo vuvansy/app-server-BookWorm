@@ -19,6 +19,7 @@ mongoose.connect(process.env.MONGO_URL)
 
 var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/users');
+var fileRouter = require('./routes/file');
 
 var app = express();
 
@@ -43,6 +44,7 @@ app.use(cors(corsOptionsDelegate));
 //Khai báo route
 app.use('/', indexRouter);
 app.use('/api/v1', usersRouter);
+app.use('/api/v1/file', fileRouter);
 
 
 
