@@ -20,6 +20,8 @@ mongoose.connect(process.env.MONGO_URL)
 var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/users');
 var fileRouter = require('./routes/file');
+var booksRouter = require('./routes/books');
+var genresRouter = require('./routes/genre');
 
 var app = express();
 
@@ -45,6 +47,8 @@ app.use(cors(corsOptionsDelegate));
 app.use('/', indexRouter);
 app.use('/api/v1', usersRouter);
 app.use('/api/v1/file', fileRouter);
+app.use('/api/v1', booksRouter);
+app.use('/api/v1', genresRouter);
 
 
 
