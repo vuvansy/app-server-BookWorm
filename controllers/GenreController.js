@@ -7,13 +7,11 @@ const {
 
         let limit = req.query.limit; 
         let page = req.query.page; 
-
-        console.log(limit, page);
-
+        let name = req.query.name;
         let result = null;
 
         if (limit && page) {
-            result = await getAllGenreService(limit, page);
+            result = await getAllGenreService(limit, page, name);
         } else
             result = await getAllGenreService();
             return res.status(200).json(

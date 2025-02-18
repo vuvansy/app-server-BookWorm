@@ -1,15 +1,25 @@
 const genreModel = require("../models/GenreModels");
 
-const getAllGenreService = async (limit, page) => {
+const getAllGenreService = async (limit, page, name) => {
     try {
         let result = null;
         if (limit && page) {
             let offset = (page - 1) * limit; //Số lượng bản ghi bỏ qua
-            result = await genreModel.find({}).skip(offset).limit(limit).exec(); //Lấy ra số lượng data theo page
+            if (name) {
+                result = await genreModel.find(
+                    {
+                        "name": { $regex: '.*' + name + '.*' }
+                    }
+                ).skip(offset).limit(limit).exec();
+                console.log(result);
+            } else
+                result = await genreModel.find({}).skip(offset).limit(limit).exec();
         } else {
             result = await genreModel.find({});
         }
+
         return result;
+
     } catch (error) {
         console.log("error >>>> ", error);
         return null;
