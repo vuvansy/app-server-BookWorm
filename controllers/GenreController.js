@@ -4,14 +4,26 @@ const {
 
 
    const getGenreAPI = async (req, res) => {
-        let result = await getAllGenreService();
-        return res.status(200).json(
+
+        let limit = req.query.limit; 
+        let page = req.query.page; 
+
+        console.log(limit, page);
+
+        let result = null;
+
+        if (limit && page) {
+            result = await getAllGenreService(limit, page);
+        } else
+            result = await getAllGenreService();
+            return res.status(200).json(
             {
                 "statusCode": 201,
                 "message": "",
                 data: result
             }
         )
+   
     }
 
     const postCreateGenre = async(req, res) => {

@@ -1,8 +1,14 @@
 const genreModel = require("../models/GenreModels");
 
-const getAllGenreService = async () => {
+const getAllGenreService = async (limit, page) => {
     try {
-        const result = await genreModel.find({});
+        let result = null;
+        if (limit && page) {
+            let offset = (page - 1) * limit; //Số lượng bản ghi bỏ qua
+            result = await genreModel.find({}).skip(offset).limit(limit).exec(); //Lấy ra số lượng data theo page
+        } else {
+            result = await genreModel.find({});
+        }
         return result;
     } catch (error) {
         console.log("error >>>> ", error);
