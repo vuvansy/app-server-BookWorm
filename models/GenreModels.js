@@ -5,7 +5,7 @@ const ObjectId = Schema.ObjectId;
 
 const genre = new Schema({
     id: { type: ObjectId },
-    name: { type: String, required: true },
+    name: { type: String, required: true, unique: true }, // Đặt unique để tránh trùng
     image: { type: String },   
 }, { timestamps: true });
 

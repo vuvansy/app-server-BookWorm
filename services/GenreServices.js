@@ -11,7 +11,7 @@ const getAllGenreService = async (limit, page, name) => {
                         "name": { $regex: '.*' + name + '.*' }
                     }
                 ).skip(offset).limit(limit).exec();
-                console.log(result);
+                // console.log(result);
             } else
                 result = await genreModel.find({}).skip(offset).limit(limit).exec();
         } else {
@@ -37,6 +37,50 @@ const createGenreService = async (genreData) => {
     } catch (error) {
        console.log(error);
        return null;
+    }
+}
+
+const createArrayGenreService = async (arrGenres) => {
+    try {
+        let validGenres = [];
+        let failedGenre = [];
+
+        for (let genre of arrGenres) {
+            // Kiểm tra Genre đã tồn tại chưa
+            const exists = await genreModel.findOne({ name: genre.name });
+
+            if (exists) {
+                failedGenre.push({ ...genre, reason: "genre đã tồn tại" });
+            } else {
+                validGenres.push(genre);
+            }
+        }
+
+        // Genre không hợp lệ thì không thêm vào DB
+        if (validGenres.length === 0) {
+            return {
+                success: false,
+                message: "Không có genre nào được thêm mới!",
+                addedCount: 0,
+                failedCount: failedGenre.length,
+                failedGenre
+            };
+        }
+
+        // Add Genre DB
+        const insertedGenres = await genreModel.insertMany(validGenres, { ordered: false });
+
+        return {
+            success: true,
+            message: "Thêm mới thành công!",
+            addedCount: insertedGenres.length,
+            failedCount: failedGenre.length,
+            failedGenre,
+            data: insertedGenres
+        };
+    } catch (error) {
+        console.log("error >>>> ", error);
+        return { success: false, message: "Lỗi khi thêm genre!", error: error.message };
     }
 }
 
@@ -68,5 +112,5 @@ const deleteAGenreService = async (id) => {
 }
 
 module.exports = {
-    getAllGenreService, createGenreService, putUpdateGenreService, deleteAGenreService
+    getAllGenreService, createGenreService, putUpdateGenreService, deleteAGenreService, createArrayGenreService
 }

@@ -1,5 +1,5 @@
 const {
-    getAllGenreService, createGenreService, putUpdateGenreService, deleteAGenreService
+    getAllGenreService, createGenreService, putUpdateGenreService, deleteAGenreService, createArrayGenreService
 } = require('../services/GenreServices')
 
 
@@ -44,6 +44,41 @@ const {
         )
     }
 
+    const  postCreateArrayGenre = async (req, res) => {
+        // console.log(req.body);
+        const arrGenres =  req.body.genres //req.body.genres data gửi lên
+        if (!Array.isArray(arrGenres) || arrGenres.length === 0) {
+            return res.status(400).json({
+                statusCode: 400,
+                message: "Danh sách sản phẩm không hợp lệ!",
+            });
+        }
+        let result = await createArrayGenreService(req.body.genres);
+        if (!result.success) {
+            return res.status(400).json({
+                statusCode: 400,
+                message: result.message,
+                data: {
+                    countSuccess: result.addedCount,
+                    countError: result.failedCount,
+                    dataError: result.failedGenre
+                }
+            });
+        }
+
+        return res.status(201).json({
+            statusCode: 201,
+            message: result.message,
+            data: {
+                countSuccess: result.addedCount,
+                countError: result.failedCount,
+                dataSuccess: result.data,
+                dataError: result.failedGenre
+            }
+        });
+
+    }
+
    const putUpdateGenre = async (req, res) => {
         let { id } = req.params;
         let { name, image } = req.body;
@@ -85,5 +120,5 @@ const {
     
 
 module.exports = { 
-    getGenreAPI, postCreateGenre, putUpdateGenre, deleteAGenre
+    getGenreAPI, postCreateGenre, putUpdateGenre, deleteAGenre, postCreateArrayGenre
 }
