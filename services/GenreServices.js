@@ -1,4 +1,3 @@
-const GenreModels = require("../models/GenreModels");
 const genreModel = require("../models/GenreModels");
 
 const getAllGenreService = async () => {
@@ -27,7 +26,7 @@ const createGenreService = async (genreData) => {
 
 const putUpdateGenreService = async (id, name, image) => {
     try {
-        let result = await GenreModels.findById(id);
+        let result = await genreModel.findById(id);
         if (!result) {
             return null;
         }
@@ -41,6 +40,17 @@ const putUpdateGenreService = async (id, name, image) => {
     }
 }
 
+
+const deleteAGenreService = async (id) => {
+    try {
+        let result = await genreModel.deleteById(id);
+        return result;
+    } catch (error) {
+        console.log("error >>>> ", error);
+        return null;
+    }
+}
+
 module.exports = {
-    getAllGenreService, createGenreService, putUpdateGenreService
+    getAllGenreService, createGenreService, putUpdateGenreService, deleteAGenreService
 }

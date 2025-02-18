@@ -1,4 +1,6 @@
-const {getAllGenreService, createGenreService, putUpdateGenreService} = require('../services/GenreServices')
+const {
+    getAllGenreService, createGenreService, putUpdateGenreService, deleteAGenreService
+} = require('../services/GenreServices')
 
 
    const getGenreAPI = async (req, res) => {
@@ -59,8 +61,19 @@ const {getAllGenreService, createGenreService, putUpdateGenreService} = require(
     }
     }
 
+    const deleteAGenre = async (req, res) => {
+        let { id } = req.params;
+        let result = await deleteAGenreService(id);
+        return res.status(200).json(
+            {
+                "statusCode": 201,
+                "message": "Xóa Genre thành công!",
+                data: result
+            }
+        )
+    }
     
 
 module.exports = { 
-    getGenreAPI, postCreateGenre, putUpdateGenre
+    getGenreAPI, postCreateGenre, putUpdateGenre, deleteAGenre
 }
