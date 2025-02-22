@@ -22,6 +22,7 @@ var usersRouter = require('./routes/users');
 var fileRouter = require('./routes/file');
 var booksRouter = require('./routes/books');
 var genresRouter = require('./routes/genre');
+var authorRouter = require('./routes/author');
 
 var app = express();
 
@@ -49,6 +50,7 @@ app.use('/api/v1', usersRouter);
 app.use('/api/v1/file', fileRouter);
 app.use('/api/v1', booksRouter);
 app.use('/api/v1', genresRouter);
+app.use('/api/v1', authorRouter);
 
 
 

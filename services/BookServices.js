@@ -24,6 +24,21 @@ const getAllBookService = async (limit, page, name)=>{
    
 }
 
+const getBookByIdService = async (id) => {
+    try {
+        const result = await bookModel.findById(id)
+            .populate("id_genre", "name")
+            .populate("authors");
+            if (!result) {
+                return { success: false, message: "Không tìm thấy sách", statusCode: 404 };
+            }
+    
+            return { success: true, data: result, statusCode: 200 };
+    } catch (error) {
+        throw new Error(error.message);
+    }
+};
+
 const createBookService = async (bookData) => {
     try {
         let result = await bookModel.create({
@@ -52,5 +67,5 @@ const createBookService = async (bookData) => {
 }
 
 module.exports = {
-    getAllBookService, createBookService
+    getAllBookService, createBookService,  getBookByIdService
 }

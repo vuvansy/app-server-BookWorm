@@ -1,4 +1,4 @@
-const {getAllBookService, createBookService} = require('../services/BookServices')
+const {getAllBookService, createBookService, getBookByIdService} = require('../services/BookServices')
 
 
    const getBookAPI = async (req, res) => {
@@ -18,6 +18,25 @@ const {getAllBookService, createBookService} = require('../services/BookServices
                 data: result
             }
         )
+    }
+
+    const getBookByIdAPI = async(req, res) =>{
+        try {
+            const { id } = req.params;
+            const result = await getBookByIdService(id);
+    
+            return res.status(result.statusCode).json({
+                statusCode: result.statusCode,
+                message: result.message || "Lấy chi tiết sách thành công!",
+                data: result.data || null,
+            });
+        } catch (error) {
+            return res.status(500).json({
+                statusCode: 500,
+                message: "Lỗi server",
+                error: error.message,
+            });
+        }
     }
 
     const postCreateBook = async(req, res) => {
@@ -73,5 +92,5 @@ const {getAllBookService, createBookService} = require('../services/BookServices
     }
 
 module.exports = { 
-    getBookAPI, postCreateBook 
+    getBookAPI, postCreateBook, getBookByIdAPI 
 }
