@@ -2,22 +2,38 @@ const {getAllBookService, createBookService, getBookByIdService} = require('../s
 
 
    const getBookAPI = async (req, res) => {
-        let limit = req.query.limit; 
-        let page = req.query.page; 
+        let pageSize = req.query.pageSize; 
+        let current = req.query.current; 
         let name = req.query.name;
-        let result = null;
+        let result, total;
 
-        if (limit && page) {
-            result = await getAllBookService(limit, page, name);
-        } else
-            result = await getAllBookService();
-            return res.status(200).json(
-            {
-                "statusCode": 201,
-                "message": "",
+        if (pageSize && current) {
+            ({ result, total } = await getAllBookService(pageSize, current, name));
+            return res.status(200).json({
+                statusCode: 200,
+                message: "Fetch Books",
+                data: {
+                    meta: {
+                        current: current,
+                        pageSize: pageSize,
+                        pages: Math.ceil(total / pageSize),
+                        total: total
+                    },
+                    result: result
+                }
+            });
+        } else {
+            ({ result } = await getAllBookService());
+
+            return res.status(200).json({
+                statusCode: 200,
+                message: "Fetch Books",
                 data: result
-            }
-        )
+            });
+        }
+
+       
+        
     }
 
     const getBookByIdAPI = async(req, res) =>{

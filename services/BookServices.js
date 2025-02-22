@@ -1,22 +1,23 @@
 const bookModel = require("../models/BookModels");
 
-const getAllBookService = async (limit, page, name)=>{
+const getAllBookService = async (current, pageSize, name)=>{
     try {
         let result = null;
-                if (limit && page) {
-                    let offset = (page - 1) * limit;
+                if (current && pageSize) {
+                    let offset = (pageSize - 1) * current;
                     if (name) {
                         result = await bookModel.find(
                             {
                                 "name": { $regex: name, $options: "i" }
                             }
-                        ).skip(offset).limit(limit).exec();
+                        ).skip(offset).limit(current).exec();
                     } else
-                        result = await bookModel.find({}).skip(offset).limit(limit).exec();
+                        result = await bookModel.find({}).skip(offset).limit(current).exec();
                 } else {
                     result = await bookModel.find({});
                 }
-                return result;
+                const total = await bookModel.countDocuments({});
+                return { result, total };
     } catch (error) {
         console.log("error >>>> ", error);
         return null;
@@ -30,7 +31,11 @@ const getBookByIdService = async (id) => {
             .populate("id_genre", "name")
             .populate("authors");
             if (!result) {
-                return { success: false, message: "Không tìm thấy sách", statusCode: 404 };
+                return {
+                    message: `Book với id = ${id} không tồn tại trên hệ thống.`,
+                    error: "Bad Request",
+                    statusCode: 400
+                };
             }
     
             return { success: true, data: result, statusCode: 200 };

@@ -5,15 +5,28 @@ const {
 
    const getGenreAPI = async (req, res) => {
 
-        let limit = req.query.limit; 
-        let page = req.query.page; 
+        let pageSize = req.query.pageSize; 
+        let current = req.query.current; 
         let name = req.query.name;
-        let result = null;
+        let result, total;
 
-        if (limit && page) {
-            result = await getAllGenreService(limit, page, name);
+        if (pageSize && current) {
+            ({ result, total } = await getAllGenreService(pageSize, current, name));
+            return res.status(200).json({
+                statusCode: 200,
+                message: "Fetch Genre",
+                data: {
+                    meta: {
+                        current: current,
+                        pageSize: pageSize,
+                        pages: Math.ceil(total / pageSize),
+                        total: total
+                    },
+                    result: result
+                }
+            });
         } else
-            result = await getAllGenreService();
+        ({ result } = await getAllGenreService());
             return res.status(200).json(
             {
                 "statusCode": 201,

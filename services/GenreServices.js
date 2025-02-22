@@ -1,24 +1,25 @@
 const genreModel = require("../models/GenreModels");
 
-const getAllGenreService = async (limit, page, name) => {
+const getAllGenreService = async (pageSize, current, name) => {
     try {
         let result = null;
-        if (limit && page) {
-            let offset = (page - 1) * limit; //Số lượng bản ghi bỏ qua
+        if (pageSize && current) {
+            let offset = (current - 1) * pageSize; //Số lượng bản ghi bỏ qua
             if (name) {
                 result = await genreModel.find(
                     {
-                        "name": { $regex: '.*' + name + '.*' }
+                        "name": { $regex: name, $options: "i" }
                     }
-                ).skip(offset).limit(limit).exec();
+                ).skip(offset).limit(pageSize).exec();
                 // console.log(result);
             } else
-                result = await genreModel.find({}).skip(offset).limit(limit).exec();
+                result = await genreModel.find({}).skip(offset).limit(pageSize).exec();
         } else {
             result = await genreModel.find({});
         }
 
-        return result;
+        const total = await genreModel.countDocuments({});
+        return { result, total };
 
     } catch (error) {
         console.log("error >>>> ", error);
