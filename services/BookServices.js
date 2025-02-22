@@ -1,9 +1,22 @@
 const bookModel = require("../models/BookModels");
 
-const getAllBookService = async ()=>{
+const getAllBookService = async (limit, page, name)=>{
     try {
-        const result = await bookModel.find({});
-        return result;
+        let result = null;
+                if (limit && page) {
+                    let offset = (page - 1) * limit;
+                    if (name) {
+                        result = await bookModel.find(
+                            {
+                                "name": { $regex: name, $options: "i" }
+                            }
+                        ).skip(offset).limit(limit).exec();
+                    } else
+                        result = await bookModel.find({}).skip(offset).limit(limit).exec();
+                } else {
+                    result = await bookModel.find({});
+                }
+                return result;
     } catch (error) {
         console.log("error >>>> ", error);
         return null;

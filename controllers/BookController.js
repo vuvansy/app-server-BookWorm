@@ -2,11 +2,19 @@ const {getAllBookService, createBookService} = require('../services/BookServices
 
 
    const getBookAPI = async (req, res) => {
-        let result = await getAllBookService();
-        return res.status(200).json(
+        let limit = req.query.limit; 
+        let page = req.query.page; 
+        let name = req.query.name;
+        let result = null;
+
+        if (limit && page) {
+            result = await getAllBookService(limit, page, name);
+        } else
+            result = await getAllBookService();
+            return res.status(200).json(
             {
-                "statusCode": 200,
-                "message": "API Books",
+                "statusCode": 201,
+                "message": "",
                 data: result
             }
         )
