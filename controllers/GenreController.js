@@ -121,14 +121,29 @@ const {
 
     const deleteAGenre = async (req, res) => {
         let { id } = req.params;
-        let result = await deleteAGenreService(id);
-        return res.status(200).json(
-            {
-                "statusCode": 201,
-                "message": "Xóa Genre thành công!",
-                data: result
+        try {
+            let result = await deleteAGenreService(id);
+    
+            if (!result) {
+                return res.status(404).json({
+                    "statusCode": 404,
+                    "message": `Không tìm thấy Genre với id ${id} để xóa.`,
+                    "data": null
+                });
             }
-        )
+    
+            return res.status(200).json({
+                "statusCode": 200,
+                "message": "Xóa Genre thành công!",
+                "data": result
+            });
+        } catch (error) {
+            return res.status(500).json({
+                "statusCode": 500,
+                "message": "Lỗi khi xóa Genre.",
+                "error": error.message
+            });
+        }
     }
     
 

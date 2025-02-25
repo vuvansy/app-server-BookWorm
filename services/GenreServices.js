@@ -105,6 +105,9 @@ const putUpdateGenreService = async (id, name, image) => {
 const deleteAGenreService = async (id) => {
     try {
         let result = await genreModel.deleteById(id);
+        if (!result || result.deletedCount === 0) {
+            throw new Error("Genre không tồn tại hoặc không thể xóa.");
+        }
         return result;
     } catch (error) {
         console.log("error >>>> ", error);

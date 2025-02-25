@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const mongoose_delete = require('mongoose-delete');
 const Schema = mongoose.Schema;
 const ObjectId = Schema.ObjectId;
 
@@ -9,10 +10,9 @@ const book = new Schema({
     image: { type: String },
     slider:{type: Array},
     price_old: { type: Number, required: true },
-    price_new: { type: Number, required: true },
+    price_new: { type: Number },
     quantity: { type: Number, required: true, min: 0 },
     description: { type: String },
-    status:{ type: Number, enum: [0, 1], default: 1 }, // 0: Ẩn, 1: Hiển thị
     weight: { type: Number },
     size: { type: String },
     publishers: { type: String },
@@ -21,5 +21,7 @@ const book = new Schema({
     page_count: { type: Number },
     book_cover: { type: String },
 }, { timestamps: true });
+
+book.plugin(mongoose_delete, { deletedAt : true, overrideMethods: 'all' });
 
 module.exports = mongoose.models.book || mongoose.model("book", book);
