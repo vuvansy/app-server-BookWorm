@@ -120,10 +120,59 @@ const deleteABookService = async (id) => {
     }
 }
 
+const getFlashSaleBooksService = async ({ current, pageSize, all }) => {
+    try {
+        current = parseInt(current) || 1;
+        pageSize = parseInt(pageSize) || 10;
+        const offset = (current - 1) * pageSize;
+
+        let booksQuery = [
+            { $match: { price_new: { $gt: 0 }, price_old: { $gt: 0 } } },
+            {
+                $addFields: { 
+                    discount: {
+                        $multiply: [
+                            { $divide: [{ $subtract: ["$price_old", "$price_new"] }, "$price_old"] },
+                            100
+                        ]
+                    }
+                }
+            },
+            { $sort: { discount: -1 } },
+        ];
+
+        if (!all) {
+            booksQuery.push({ $limit: 10 });
+        } else {
+            booksQuery.push({ $skip: offset }, { $limit: pageSize });
+        }
+
+        let result = await bookModel.aggregate(booksQuery);
+
+        let totalBooks = 0;
+        if (all) {
+            totalBooks = await bookModel.countDocuments({ price_new: { $gt: 0 }, price_old: { $gt: 0 } });
+        }
+
+        return {
+            result,
+            meta: all ? {
+                current: current,
+                pageSize: pageSize,
+                total: totalBooks,
+                pages: Math.ceil(totalBooks / pageSize)
+            } : null
+        };
+    } catch (error) {
+        throw new Error(error.message);
+    }
+};
+
 module.exports = {
     getAllBookService,
     createBookService,
     getBookByIdService,
     putUpdateBookService,
-    deleteABookService
+    deleteABookService,
+    getFlashSaleBooksService
 }

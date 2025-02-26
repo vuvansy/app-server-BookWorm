@@ -3,7 +3,8 @@ const {
     createBookService,
     getBookByIdService,
     putUpdateBookService,
-    deleteABookService
+    deleteABookService,
+    getFlashSaleBooksService
 
 } = require('../services/BookServices')
 
@@ -234,10 +235,71 @@ const deleteABook = async (req, res) => {
   }
 }
 
+// const getTopFlashSaleBooks = async (req, res) => {
+//     try {
+//         let { current, pageSize, all } = req.query;
+//         let result, total;
+//         if (pageSize && current) {
+//             ({ result, total } = await getTopFlashSaleBooksService(pageSize, current, name));
+//             return res.status(200).json({
+//                 statusCode: 200,
+//                 message: "Fetch Genre",
+//                 data: {
+//                     meta: {
+//                         current: current,
+//                         pageSize: pageSize,
+//                         pages: Math.ceil(total / pageSize),
+//                         total: total
+//                     },
+//                     result: result
+//                 }
+//             });
+//         } else
+//         ({ result } = await getTopFlashSaleBooksService());
+//             return res.status(200).json(
+//             {
+//                 "statusCode": 201,
+//                 "message": "",
+//                 data: result
+//             }
+//         )
+//     } catch (error) {
+//         console.error("Lỗi khi lấy danh sách flash sale:", error);
+//         return res.status(500).json({
+//             statusCode: 500,
+//             message: "Lỗi máy chủ, không thể lấy danh sách sản phẩm.",
+//             error: error.message
+//         });
+//     }
+// };
+
+const getFlashSaleBooks = async (req, res) => {
+    try {
+        const { current, pageSize, all } = req.query;
+
+        const { result, meta } = await getFlashSaleBooksService({ current, pageSize, all });
+
+        return res.status(200).json({
+            statusCode: 200,
+            message: "Lấy danh sách sách giảm giá thành công!",
+            meta,
+            data: result
+        });
+    } catch (error) {
+        console.error("Lỗi khi lấy danh sách flash sale:", error);
+        return res.status(500).json({
+            statusCode: 500,
+            message: "Lỗi máy chủ, không thể lấy danh sách sản phẩm.",
+            error: error.message
+        });
+    }
+};
+
 module.exports = {
     getBookAPI,
     postCreateBook,
     getBookByIdAPI,
     putUpdateBook,
-    deleteABook
+    deleteABook, 
+    getFlashSaleBooks
 }
