@@ -89,7 +89,6 @@ const postCreateBook = async (req, res) => {
             price_new,
             quantity,
             description,
-           
             weight,
             size,
             publishers,
@@ -156,7 +155,7 @@ const postCreateBook = async (req, res) => {
 }
 
 const putUpdateBook = async (req, res) => {
-    let {id} = req.params;
+    let { id } = req.params;
     let {
         id_genre,
         name,
@@ -212,27 +211,27 @@ const putUpdateBook = async (req, res) => {
 const deleteABook = async (req, res) => {
     let { id } = req.params;
     try {
-    let result = await deleteABookService(id);
-    if (!result) {
-        return res.status(404).json({
-            "statusCode": 404,
-            "message": `Không tìm thấy Book với id = ${id} để xóa.`,
-            "data": null
+        let result = await deleteABookService(id);
+        if (!result) {
+            return res.status(404).json({
+                "statusCode": 404,
+                "message": `Không tìm thấy Book với id = ${id} để xóa.`,
+                "data": null
+            });
+        }
+
+        return res.status(200).json({
+            "statusCode": 201,
+            "message": "Xóa Book thành công!",
+            data: result
+        })
+    } catch (error) {
+        return res.status(500).json({
+            "statusCode": 500,
+            "message": "Lỗi khi xóa Genre.",
+            "error": error.message
         });
     }
-
-    return res.status(200).json({
-        "statusCode": 201,
-        "message": "Xóa Book thành công!",
-        data: result
-    })
-    } catch (error) {
-    return res.status(500).json({
-        "statusCode": 500,
-        "message": "Lỗi khi xóa Genre.",
-        "error": error.message
-    });
-  }
 }
 
 // const getTopFlashSaleBooks = async (req, res) => {
@@ -300,6 +299,6 @@ module.exports = {
     postCreateBook,
     getBookByIdAPI,
     putUpdateBook,
-    deleteABook, 
+    deleteABook,
     getFlashSaleBooks
 }

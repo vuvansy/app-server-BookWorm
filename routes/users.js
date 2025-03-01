@@ -13,6 +13,6 @@ router.get('/', function(req, res, next) {
 });
 
 router.get('/user', getUsersAPI);
-router.post('/user',upload.single('image'), postCreateUserAPI);
+router.post('/user', postCreateUserAPI);
 
 module.exports = router;

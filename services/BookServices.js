@@ -26,7 +26,6 @@ const getAllBookService = async (current, pageSize, name) => {
         console.log("error >>>> ", error);
         return null;
     }
-
 }
 
 const getBookByIdService = async (id) => {
@@ -78,7 +77,7 @@ const createBookService = async (bookData) => {
     }
 }
 
-const putUpdateBookService = async (id, id_genre, name, image, slider, price_old, price_new, quantity, description, status, weight, size, publishers, authors, year, page_count, book_cover) => {
+const putUpdateBookService = async (id, id_genre, name, image, slider, price_old, price_new, quantity, description, weight, size, publishers, authors, year, page_count, book_cover) => {
     try {
         let result = await bookModel.findById(id);
         if (!result) {
@@ -92,8 +91,9 @@ const putUpdateBookService = async (id, id_genre, name, image, slider, price_old
         result.price_new = price_new !== undefined ? Number(price_new) : result.price_new;
         result.quantity = quantity ? quantity : result.quantity;
         result.description = description ? description : result.description;
-        result.status = status !== undefined ? Number(status) : result.status;
         result.weight = weight ? weight : result.weight;
+        result.size = size ? size : result.size;
+        result.authors = authors ? authors : result.authors;
         result.publishers = publishers ? publishers : result.publishers;
         result.year = year ? year : result.year;
         result.page_count = page_count ? page_count : result.page_count;
