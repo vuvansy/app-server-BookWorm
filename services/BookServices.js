@@ -1,22 +1,28 @@
 const bookModel = require("../models/BookModels");
+const aqp = require('api-query-params');
 
-const getAllBookService = async (current, pageSize, name) => {
+const getAllBookService = async (limit, page, name, queryString) => {
     try {
         let result = null;
-        if (current && pageSize) {
-            let offset = (pageSize - 1) * current;
-            if (name) {
-                result = await bookModel.find({
-                    "name": {
-                        $regex: name,
-                        $options: "i"
-                    }
-                }).skip(offset).limit(current).exec();
-            } else
-                result = await bookModel.find({}).skip(offset).limit(current).exec();
+
+        if (page && limit) {
+            let offset = (page - 1) * limit;
+
+            const { filter } = aqp(queryString);
+            delete filter.page;
+            console.log(filter);
+
+            Object.keys(filter).forEach(key => {
+                if (typeof filter[key] === "string") {
+                    filter[key] = { $regex: filter[key], $options: "i" };
+                }
+            });
+
+            result = await bookModel.find(filter).skip(offset).limit(limit).exec();
         } else {
             result = await bookModel.find({});
         }
+
         const total = await bookModel.countDocuments({});
         return {
             result,
@@ -98,7 +104,7 @@ const putUpdateBookService = async (id, id_genre, name, image, slider, price_old
         result.year = year ? year : result.year;
         result.page_count = page_count ? page_count : result.page_count;
         result.book_cover = book_cover ? book_cover : result.book_cover;
-      
+
         await result.save()
         return result;
     } catch (error) {
@@ -129,7 +135,7 @@ const getFlashSaleBooksService = async ({ current, pageSize, all }) => {
         let booksQuery = [
             { $match: { price_new: { $gt: 0 }, price_old: { $gt: 0 } } },
             {
-                $addFields: { 
+                $addFields: {
                     discount: {
                         $multiply: [
                             { $divide: [{ $subtract: ["$price_old", "$price_new"] }, "$price_old"] },

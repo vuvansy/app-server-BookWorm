@@ -1,19 +1,22 @@
 const genreModel = require("../models/GenreModels");
+const aqp = require('api-query-params');
 
-const getAllGenreService = async (pageSize, current, name) => {
+const getAllGenreService = async (limit, page, name, queryString) => {
     try {
         let result = null;
-        if (pageSize && current) {
-            let offset = (current - 1) * pageSize; //Số lượng bản ghi bỏ qua
-            if (name) {
-                result = await genreModel.find(
-                    {
-                        "name": { $regex: name, $options: "i" }
-                    }
-                ).skip(offset).limit(pageSize).exec();
-                // console.log(result);
-            } else
-                result = await genreModel.find({}).skip(offset).limit(pageSize).exec();
+        if (limit && page) {
+            let offset = (page - 1) * limit;
+
+            const { filter } = aqp(queryString);
+            delete filter.page;
+
+            Object.keys(filter).forEach(key => {
+                if (typeof filter[key] === "string") {
+                    filter[key] = { $regex: filter[key], $options: "i" };
+                }
+            });
+
+            result = await genreModel.find(filter).skip(offset).limit(limit).exec();
         } else {
             result = await genreModel.find({});
         }
@@ -25,19 +28,19 @@ const getAllGenreService = async (pageSize, current, name) => {
         console.log("error >>>> ", error);
         return null;
     }
-   
+
 }
 
 const createGenreService = async (genreData) => {
     try {
         let result = await genreModel.create({
-        name: genreData.name,
-        image: genreData.image
-       })
-       return result;
+            name: genreData.name,
+            image: genreData.image
+        })
+        return result;
     } catch (error) {
-       console.log(error);
-       return null;
+        console.log(error);
+        return null;
     }
 }
 

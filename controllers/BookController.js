@@ -10,24 +10,21 @@ const {
 
 
 const getBookAPI = async (req, res) => {
-    let pageSize = req.query.pageSize;
-    let current = req.query.current;
+    let limit = req.query.limit;
+    let page = req.query.page;
     let name = req.query.name;
     let result, total;
 
-    if (pageSize && current) {
-        ({
-            result,
-            total
-        } = await getAllBookService(pageSize, current, name));
+    if (limit && page) {
+        ({ result, total } = await getAllBookService(limit, page, name, req.query));
         return res.status(200).json({
             statusCode: 200,
             message: "Fetch Books",
             data: {
                 meta: {
-                    current: current,
-                    pageSize: pageSize,
-                    pages: Math.ceil(total / pageSize),
+                    page: page,
+                    limit: limit,
+                    pages: Math.ceil(total / limit),
                     total: total
                 },
                 result: result
@@ -234,43 +231,6 @@ const deleteABook = async (req, res) => {
     }
 }
 
-// const getTopFlashSaleBooks = async (req, res) => {
-//     try {
-//         let { current, pageSize, all } = req.query;
-//         let result, total;
-//         if (pageSize && current) {
-//             ({ result, total } = await getTopFlashSaleBooksService(pageSize, current, name));
-//             return res.status(200).json({
-//                 statusCode: 200,
-//                 message: "Fetch Genre",
-//                 data: {
-//                     meta: {
-//                         current: current,
-//                         pageSize: pageSize,
-//                         pages: Math.ceil(total / pageSize),
-//                         total: total
-//                     },
-//                     result: result
-//                 }
-//             });
-//         } else
-//         ({ result } = await getTopFlashSaleBooksService());
-//             return res.status(200).json(
-//             {
-//                 "statusCode": 201,
-//                 "message": "",
-//                 data: result
-//             }
-//         )
-//     } catch (error) {
-//         console.error("Lỗi khi lấy danh sách flash sale:", error);
-//         return res.status(500).json({
-//             statusCode: 500,
-//             message: "Lỗi máy chủ, không thể lấy danh sách sản phẩm.",
-//             error: error.message
-//         });
-//     }
-// };
 
 const getFlashSaleBooks = async (req, res) => {
     try {

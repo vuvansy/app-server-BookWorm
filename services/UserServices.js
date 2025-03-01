@@ -11,7 +11,6 @@ const getAllUserService = async (limit, page, fullName, queryString) => {
         if (limit && page) {
             let offset = (page - 1) * limit; //Số lượng bản ghi bỏ qua
             const { filter } = aqp(queryString);
-            console.log(filter);
             delete filter.page;
 
             Object.keys(filter).forEach(key => {
@@ -50,7 +49,7 @@ const createUserService = async (userData) => {
         if (!userData.image) {
             userData.image = "/avatar.jpg";
         }
-        
+
         const salt = bcrypt.genSaltSync(10);
         userData.password = bcrypt.hashSync(userData.password, salt);
 
