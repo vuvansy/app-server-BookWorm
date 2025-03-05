@@ -191,6 +191,41 @@ const getBooksByGenreService = async (id_genre, id) => {
     }
 };
 
+const getNewBooksService = async ({ page, limit, all }) => {
+    try {
+        page = parseInt(page) || 1;
+        limit = parseInt(limit) || 10;
+        const offset = (page - 1) * limit;
+        const matchStage = {};
+        const booksQuery = [
+            { $match: matchStage },
+            { $sort: { createdAt: -1 } },
+        ];
+        if (!all) {
+            booksQuery.push({ $limit: 10 });
+        } else {
+            booksQuery.push({ $skip: offset }, { $limit: limit });
+        }
+        const result = await bookModel.aggregate(booksQuery);
+
+        let totalBooks = 0;
+        if (all) {
+            totalBooks = await bookModel.countDocuments();
+        }
+        return {
+            result,
+            meta: all ? {
+                page: page,
+                limit: limit,
+                total: totalBooks,
+                pages: Math.ceil(totalBooks / limit)
+            } : null
+        };
+    } catch (error) {
+        throw new Error(error.message);
+    }
+};
+
 module.exports = {
     getAllBookService,
     createBookService,
@@ -198,5 +233,6 @@ module.exports = {
     putUpdateBookService,
     deleteABookService,
     getFlashSaleBooksService,
-    getBooksByGenreService
+    getBooksByGenreService,
+    getNewBooksService
 }
