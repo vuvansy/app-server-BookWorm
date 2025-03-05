@@ -10,7 +10,7 @@ const getAllBookService = async (limit, page, name, queryString) => {
 
             const { filter } = aqp(queryString);
             delete filter.page;
-            console.log(filter);
+
 
             Object.keys(filter).forEach(key => {
                 if (typeof filter[key] === "string") {
@@ -18,9 +18,19 @@ const getAllBookService = async (limit, page, name, queryString) => {
                 }
             });
 
-            result = await bookModel.find(filter).skip(offset).limit(limit).exec();
+            // result = await bookModel.find(filter).skip(offset).limit(limit).exec();
+            result = await bookModel.find(filter)
+                .skip(offset)
+                .limit(limit)
+                .populate("id_genre", "name")
+                .populate("authors", "name")
+                .exec();
         } else {
-            result = await bookModel.find({});
+            // result = await bookModel.find({});
+            result = await bookModel.find({})
+                .populate("id_genre", "name")
+                .populate("authors", "name")
+                .exec();
         }
 
         const total = await bookModel.countDocuments({});
