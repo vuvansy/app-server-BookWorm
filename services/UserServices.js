@@ -70,6 +70,64 @@ const createUserService = async (userData) => {
     }
 }
 
+const loginUserService = async (email, password) => {
+    try {
+        const result = await userModel.findOne({ email });
+
+        if (!result) {
+            return {
+                message: "Thông tin đăng nhập không chính xác",
+                error: "Bad Request",
+                statusCode: 400
+            };
+        }
+        const isMatch = bcrypt.compareSync(password, result.password);
+        if (!isMatch) {
+            return {
+                message: "Thông tin đăng nhập không chính xác",
+                error: "Bad Request",
+                statusCode: 400
+            };
+        }
+
+        if (result && bcrypt.compareSync(password, result.password)) {
+            const access_token = jwt.sign({ result }, "shhhhh", {
+                expiresIn: 1 * 60,
+            });
+            const refresh_token = jwt.sign({ result }, "shhhhh", {
+                expiresIn: 90 * 24 * 60 * 60,
+            });
+            // access token là chuỗi ngẫu nhiên, dùng để xác thực người dùng
+            // refresh token là chuỗi ngẫu nhiên, dùng để lấy lại access token
+            return {
+
+                message: "Login",
+                statusCode: 201,
+                data: {
+                    access_token,
+                    refresh_token,
+                    user: {
+                        id: result._id,
+                        fullName: result.fullName,
+                        email: result.email,
+                        phone: result.phone,
+                        role: result.role,
+                        avatar: result.avatar,
+                    },
+                },
+            };
+        } else {
+            res.json({
+                status: 300,
+                message: "Sai tên đăng nhập hoặc mật khẩu",
+            });
+        }
+    } catch (error) {
+        console.error("Login Error:", error);
+        return { status: 500, message: "Lỗi server" };
+    }
+}
+
 module.exports = {
-    getAllUserService, createUserService
+    getAllUserService, createUserService, loginUserService
 }

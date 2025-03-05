@@ -174,11 +174,29 @@ const getFlashSaleBooksService = async ({ current, pageSize, all }) => {
     }
 };
 
+const getBooksByGenreService = async (id_genre, id) => {
+    try {
+        const query = { id_genre };
+        if (id) {
+            query._id = { $ne: id };
+        }
+        const result = await bookModel
+            .find(query)
+            .sort({ createdAt: -1 })
+            .limit(10);
+        return result;
+    } catch (error) {
+        console.error("Error in getBooksByGenreService:", error);
+        throw new Error("Lỗi lấy danh sách sách liên quan");
+    }
+};
+
 module.exports = {
     getAllBookService,
     createBookService,
     getBookByIdService,
     putUpdateBookService,
     deleteABookService,
-    getFlashSaleBooksService
+    getFlashSaleBooksService,
+    getBooksByGenreService
 }

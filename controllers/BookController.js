@@ -4,7 +4,8 @@ const {
     getBookByIdService,
     putUpdateBookService,
     deleteABookService,
-    getFlashSaleBooksService
+    getFlashSaleBooksService,
+    getBooksByGenreService
 
 } = require('../services/BookServices')
 
@@ -254,11 +255,41 @@ const getFlashSaleBooks = async (req, res) => {
     }
 };
 
+const getBooksByGenreAPI = async (req, res) => {
+    try {
+        const id = req.params.id;
+        const id_genre = req.params.id_genre;
+        if (!id_genre || !/^[0-9a-fA-F]{24}$/.test(id_genre)) {
+            return res.status(400).json({
+                message: "id_genre không hợp lệ",
+                statusCode: 400,
+                error: "Bad Request"
+            });
+        }
+
+        const result = await getBooksByGenreService(id_genre, id);
+
+        return res.status(200).json({
+            message: "Lấy danh sách sách liên quan thành công",
+            statusCode: 200,
+            data: result
+        });
+    } catch (error) {
+        console.error("Error fetching related books:", error);
+        return res.status(500).json({
+            message: "Lỗi server",
+            statusCode: 500,
+            error: "Internal Server Error"
+        });
+    }
+};
+
 module.exports = {
     getBookAPI,
     postCreateBook,
     getBookByIdAPI,
     putUpdateBook,
     deleteABook,
-    getFlashSaleBooks
+    getFlashSaleBooks,
+    getBooksByGenreAPI
 }

@@ -1,37 +1,39 @@
-const { getAllUserService, createUserService } = require('../services/UserServices')
+const { getAllUserService, createUserService,
+    loginUserService
+} = require('../services/UserServices')
 
 
 const getUsersAPI = async (req, res) => {
-    
-        let limit = req.query.limit;
-        let page = req.query.page;
-        let fullName = req.query.fullName;
-        let result, total;
 
-        if (limit && page) {
-            ({ result, total } = await getAllUserService(limit, page, fullName, req.query));
-            return res.status(200).json({
-                statusCode: 200,
-                message: "Fetch Users with Pagination",
-                data: {
-                    meta: {
-                        page,
-                        limit,
-                        pages: Math.ceil(total / limit),
-                        total
-                    },
-                    result
-                }
-            });
-        } else {
-            ({ result, total } = await getAllUserService());
-            return res.status(200).json({
-                statusCode: 200,
-                message: "Fetch All Users",
-                data: result
-            });
-        }
-    
+    let limit = req.query.limit;
+    let page = req.query.page;
+    let fullName = req.query.fullName;
+    let result, total;
+
+    if (limit && page) {
+        ({ result, total } = await getAllUserService(limit, page, fullName, req.query));
+        return res.status(200).json({
+            statusCode: 200,
+            message: "Fetch Users with Pagination",
+            data: {
+                meta: {
+                    page,
+                    limit,
+                    pages: Math.ceil(total / limit),
+                    total
+                },
+                result
+            }
+        });
+    } else {
+        ({ result, total } = await getAllUserService());
+        return res.status(200).json({
+            statusCode: 200,
+            message: "Fetch All Users",
+            data: result
+        });
+    }
+
 }
 
 const postCreateUserAPI = async (req, res) => {
@@ -60,7 +62,28 @@ const postCreateUserAPI = async (req, res) => {
     }
 }
 
+const loginUserAPI = async (req, res) => {
+    try {
+        const { email, password } = req.body;
+        if (!email || !password) {
+            return res.status(400).json(
+                {
+                    "message": "Unauthorized",
+                    "statusCode": 401
+                }
+            )
+        }
+        const result = await loginUserService(email, password);
+
+        return res.status(200).json(result);
+    } catch (error) {
+        console.error("API Login Error:", error);
+        return res.status(500).json({ statusCode: 500, message: "Lỗi server" });
+    }
+
+}
+
 module.exports = {
-    getUsersAPI, postCreateUserAPI
+    getUsersAPI, postCreateUserAPI, loginUserAPI
 }
 

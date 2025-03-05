@@ -12,13 +12,14 @@ const mongoose = require("mongoose");
 
 // Connect to DB
 mongoose.connect(process.env.MONGO_URL)
-    .then(() =>
-        console.log(">>>>>>>>>> MongoDB Connected successfully ✅ !")
-    )
-    .catch((err) => console.log(">>>>>>>>> DB Error: ❌", err));
+  .then(() =>
+    console.log(">>>>>>>>>> MongoDB Connected successfully ✅ !")
+  )
+  .catch((err) => console.log(">>>>>>>>> DB Error: ❌", err));
 
 var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/users');
+var authRouter = require('./routes/auth');
 var fileRouter = require('./routes/file');
 var booksRouter = require('./routes/books');
 var genresRouter = require('./routes/genre');
@@ -28,7 +29,7 @@ var app = express();
 
 var corsOptionsDelegate = function (req, callback) {
   var corsOptions = { origin: true };
-  callback(null, corsOptions); 
+  callback(null, corsOptions);
 };
 
 // view engine setup
@@ -51,17 +52,18 @@ app.use('/api/v1/file', fileRouter);
 app.use('/api/v1', booksRouter);
 app.use('/api/v1', genresRouter);
 app.use('/api/v1', authorRouter);
+app.use('/api/v1', authRouter);
 
 
 
 
 // catch 404 and forward to error handler
-app.use(function(req, res, next) {
+app.use(function (req, res, next) {
   next(createError(404));
 });
 
 // error handler
-app.use(function(err, req, res, next) {
+app.use(function (err, req, res, next) {
   // set locals, only providing error in development
   res.locals.message = err.message;
   res.locals.error = req.app.get('env') === 'development' ? err : {};
