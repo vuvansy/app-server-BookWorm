@@ -11,42 +11,44 @@ const {
 } = require('../services/BookServices')
 
 
+
 const getBookAPI = async (req, res) => {
-    let limit = req.query.limit;
-    let page = req.query.page;
-    let name = req.query.name;
-    let result, total;
+    let { limit, page, name } = req.query;
+    limit = limit ? Number(limit) : null;
+    page = page ? Number(page) : null;
 
-    if (limit && page) {
-        ({ result, total } = await getAllBookService(limit, page, name, req.query));
-        return res.status(200).json({
-            statusCode: 200,
-            message: "Fetch Books",
-            data: {
-                meta: {
-                    page: page,
-                    limit: limit,
-                    pages: Math.ceil(total / limit),
-                    total: total
-                },
-                result: result
-            }
-        });
-    } else {
-        ({
-            result
-        } = await getAllBookService());
+    const data = await getAllBookService(limit, page, name, req.query);
 
-        return res.status(200).json({
-            statusCode: 200,
-            message: "Fetch Books",
-            data: result
+    if (!data) {
+        return res.status(500).json({
+            statusCode: 500,
+            message: "Lỗi khi lấy danh sách sách",
+            data: null
         });
     }
 
-
-
-}
+    if (limit && page) {
+        return res.status(200).json({
+            statusCode: 200,
+            message: "Danh sách sách có phân trang",
+            data: {
+                meta: {
+                    page,
+                    limit,
+                    pages: Math.ceil(data.total / limit),
+                    total: data.total
+                },
+                result: data.result
+            }
+        });
+    } else {
+        return res.status(200).json({
+            statusCode: 200,
+            message: "Danh sách sách",
+            data: data.result
+        });
+    }
+};
 
 const getBookByIdAPI = async (req, res) => {
     try {

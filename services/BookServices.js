@@ -1,48 +1,87 @@
 const bookModel = require("../models/BookModels");
 const aqp = require('api-query-params');
+const mongoose = require("mongoose");
+
 
 const getAllBookService = async (limit, page, name, queryString) => {
     try {
         let result = null;
+        let filter = {};
+        // const { filter: queryFilter } = aqp(queryString);
+        const parsedQuery = aqp(queryString);
+        const queryFilter = parsedQuery.filter || {};
+        const querySort = parsedQuery.sort || {};
 
+        delete queryFilter.page;
+
+        if (queryString.id_genre) {
+            let genres = [];
+
+            if (Array.isArray(queryString.id_genre)) {
+                genres = queryString.id_genre;
+            } else if (typeof queryString.id_genre === "string") {
+                genres = queryString.id_genre.split(",");
+            }
+
+            genres = genres.map(id => new mongoose.Types.ObjectId(id));
+            filter.id_genre = { $in: genres };
+        }
+
+       
+        if (queryFilter.name) {
+            filter.name = { $regex: queryFilter.name, $options: 'i' };
+        }
+      
+        if (queryFilter.price_min || queryFilter.price_max) {
+            filter.price_new = {};
+            if (queryFilter.price_min) {
+                filter.price_new.$gte = Number(queryFilter.price_min);
+            }
+            if (queryFilter.price_max) {
+                filter.price_new.$lte = Number(queryFilter.price_max);
+            }
+        }
+
+        let sort = {};
+        if (queryString.sort) {
+            let sortField = queryString.sort;
+
+            if (sortField.startsWith('-')) {
+                sortField = sortField.substring(1);
+                sort[sortField] = -1;
+            } else {
+                sort[sortField] = 1;
+            }
+        } else {
+            sort = { createdAt: -1 };
+        }
+
+       
         if (page && limit) {
             let offset = (page - 1) * limit;
-
-            const { filter } = aqp(queryString);
-            delete filter.page;
-
-
-            Object.keys(filter).forEach(key => {
-                if (typeof filter[key] === "string") {
-                    filter[key] = { $regex: filter[key], $options: "i" };
-                }
-            });
-
-            // result = await bookModel.find(filter).skip(offset).limit(limit).exec();
             result = await bookModel.find(filter)
                 .skip(offset)
                 .limit(limit)
+                .sort(sort)
                 .populate("id_genre", "name")
                 .populate("authors", "name")
                 .exec();
         } else {
-            // result = await bookModel.find({});
-            result = await bookModel.find({})
+            result = await bookModel.find(filter)
+                .sort(sort)
                 .populate("id_genre", "name")
                 .populate("authors", "name")
                 .exec();
         }
 
-        const total = await bookModel.countDocuments({});
-        return {
-            result,
-            total
-        };
+        const total = await bookModel.countDocuments(filter);
+        return { result, total };
     } catch (error) {
         console.log("error >>>> ", error);
         return null;
     }
-}
+};
+
 
 const getBookByIdService = async (id) => {
     try {
