@@ -6,7 +6,8 @@ const {
     deleteABookService,
     getFlashSaleBooksService,
     getBooksByGenreService,
-    getNewBooksService
+    getNewBooksService,
+    searchBooksService
 
 } = require('../services/BookServices')
 
@@ -309,6 +310,32 @@ const getNewBooksAPI = async (req, res) => {
     }
 };
 
+
+const searchBooksAPI = async (req, res) => {
+    try {
+        const { search } = req.query;
+
+        const result = await searchBooksService(search);
+
+        if (!result) {
+            return res.status(500).json({ 
+                statusCode: 500,
+                message: "Lỗi khi tìm kiếm" });
+        }
+
+        return res.status(200).json({
+            statusCode: 200,
+            message: "Tìm kiếm thành công",
+            data: result
+        });
+    } catch (error) {
+        console.error("Lỗi API:", error);
+        return res.status(500).json({ success: false, message: "Lỗi server" });
+    }
+};
+
+
+
 module.exports = {
     getBookAPI,
     postCreateBook,
@@ -317,5 +344,7 @@ module.exports = {
     deleteABook,
     getFlashSaleBooks,
     getBooksByGenreAPI,
-    getNewBooksAPI
+    getNewBooksAPI,
+    searchBooksAPI
+
 }

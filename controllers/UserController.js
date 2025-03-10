@@ -5,8 +5,9 @@ const { getAllUserService, createUserService,
 
 const getUsersAPI = async (req, res) => {
 
-    let limit = req.query.limit;
-    let page = req.query.page;
+    let { limit, page } = req.query;
+    limit = limit ? Number(limit) : null;
+    page = page ? Number(page) : null;
     let fullName = req.query.fullName;
     let result, total;
 

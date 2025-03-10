@@ -27,11 +27,11 @@ const getAllBookService = async (limit, page, name, queryString) => {
             filter.id_genre = { $in: genres };
         }
 
-       
+
         if (queryFilter.name) {
             filter.name = { $regex: queryFilter.name, $options: 'i' };
         }
-      
+
         if (queryFilter.price_min || queryFilter.price_max) {
             filter.price_new = {};
             if (queryFilter.price_min) {
@@ -56,7 +56,7 @@ const getAllBookService = async (limit, page, name, queryString) => {
             sort = { createdAt: -1 };
         }
 
-       
+
         if (page && limit) {
             let offset = (page - 1) * limit;
             result = await bookModel.find(filter)
@@ -275,6 +275,64 @@ const getNewBooksService = async ({ page, limit, all }) => {
     }
 };
 
+const searchBooksService = async (searchQuery) => {
+    try {
+        if (!searchQuery) return [];
+
+        const regex = new RegExp(searchQuery, "i");
+
+        const result = await bookModel.aggregate([
+            // Lookup để join với thể loại
+            {
+                $lookup: {
+                    from: "genres",
+                    localField: "id_genre",
+                    foreignField: "_id",
+                    as: "genre"
+                }
+            },
+            { $unwind: "$genre" }, // Gỡ mảng thể loại
+
+            // Lookup để join với tác giả
+            {
+                $lookup: {
+                    from: "authors",
+                    localField: "authors",
+                    foreignField: "_id",
+                    as: "authorData"
+                }
+            },
+
+            // Tạo bộ lọc tìm kiếm
+            {
+                $match: {
+                    $or: [
+                        { name: regex }, // Tìm theo tên sách
+                        { "genre.name": regex }, // Tìm theo tên thể loại
+                        { "authorData.name": regex }, // Tìm theo tên tác giả
+                        { publishers: regex } // Tìm theo nhà xuất bản
+                    ]
+                }
+            },
+
+            // Chỉ lấy 5 kết quả
+            { $limit: 5 },
+            {
+                $project: {
+                    genre: 0,
+                    authorData: 0
+                }
+            }
+        ]);
+
+        return result;
+    } catch (error) {
+        console.error("Lỗi khi tìm kiếm:", error);
+        return null;
+    }
+};
+
+
 module.exports = {
     getAllBookService,
     createBookService,
@@ -283,5 +341,6 @@ module.exports = {
     deleteABookService,
     getFlashSaleBooksService,
     getBooksByGenreService,
-    getNewBooksService
+    getNewBooksService,
+    searchBooksService
 }

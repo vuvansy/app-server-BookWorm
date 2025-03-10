@@ -67,7 +67,75 @@ const createCouponService = async (couponData) => {
     }
 };
 
+const getCouponByIdService = async (id) => {
+    try {
+        const result = await couponModel.findById(id)
+        if (!result) {
+            return {
+                message: `Coupon với id = ${id} không tồn tại trên hệ thống.`,
+                error: "Bad Request",
+                statusCode: 400
+            };
+        }
+
+        return {
+            success: true,
+            data: result,
+            statusCode: 200
+        };
+    } catch (error) {
+        throw new Error(error.message);
+    }
+};
+
+const applyCouponService = async (code) => {
+    try {
+        const result = await couponModel.findOne({ code });
+
+        if (!result) {
+            return {
+                message: "Mã giảm giá không hợp lệ!",
+                error: "Bad Request",
+                statusCode: 400
+            };
+        }
+
+        const now = new Date();
+        if (result.start_date && now < result.start_date) {
+            return {
+                message: "Mã giảm giá chưa được kích hoạt!",
+                error: "Bad Request",
+                statusCode: 400
+            };
+        }
+        if (result.end_date && now > result.end_date) {
+            return {
+                message: "Mã giảm giá đã hết hạn!",
+                error: "Bad Request",
+                statusCode: 400
+            };
+        }
+        // Kiểm tra số lượt sử dụng
+        if (result.quantity <= 0) {
+            return {
+                message: "Mã giảm giá đã hết lượt sử dụng!",
+                error: "Bad Request",
+                statusCode: 400
+            };
+        }
+
+        return {
+            success: true,
+            message: "Mã giảm giá hợp lệ!",
+            data: result,
+            statusCode: 200
+        };
+
+    } catch (error) {
+        throw new Error(error.message);
+    }
+};
 
 module.exports = {
-    createCouponService, getAllCouponService
+    createCouponService, getAllCouponService, getCouponByIdService, applyCouponService
 }

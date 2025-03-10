@@ -9,7 +9,8 @@ const {
     deleteABook,
     getFlashSaleBooks,
     getBooksByGenreAPI,
-    getNewBooksAPI
+    getNewBooksAPI,
+    searchBooksAPI
 } = require('../controllers/BookController')
 
 
@@ -17,6 +18,7 @@ router.get('/book', getBookAPI);
 router.post('/book', postCreateBook);
 router.get("/book/flash-sale", getFlashSaleBooks);
 router.get("/book/new", getNewBooksAPI);
+router.get("/book/search", searchBooksAPI);
 router.get("/book/:id/genre/:id_genre", getBooksByGenreAPI);
 router.put('/book/:id', putUpdateBook);
 router.delete('/book/:id', deleteABook);

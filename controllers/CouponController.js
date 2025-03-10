@@ -1,5 +1,5 @@
 const {
-    createCouponService, getAllCouponService
+    createCouponService, getAllCouponService, getCouponByIdService, applyCouponService
 } = require('../services/CouponServices')
 
 
@@ -71,8 +71,48 @@ const postCreateCoupon = async (req, res) => {
     }
 };
 
+const getCouponById = async (req, res) => {
+    try {
+        const {
+            id
+        } = req.params;
+        const result = await getCouponByIdService(id);
 
+        return res.status(result.statusCode).json({
+            statusCode: result.statusCode,
+            message: result.message || "Lấy chi tiết Coupon thành công!",
+            data: result.data || null,
+        });
+    } catch (error) {
+        return res.status(500).json({
+            statusCode: 500,
+            message: "Lỗi server",
+            error: error.message,
+        });
+    }
+}
+
+const applyCoupon = async (req, res) => {
+    try {
+        const { code } = req.body;
+        console.log(code);
+
+        const result = await applyCouponService(code);
+
+        return res.status(result.statusCode).json({
+            statusCode: result.statusCode,
+            message: result.message,
+            data: result.data || null,
+        });
+    } catch (error) {
+        return res.status(500).json({
+            statusCode: 500,
+            message: "Lỗi server",
+            error: error.message,
+        });
+    }
+};
 
 module.exports = {
-    postCreateCoupon, getCouponAPI
+    postCreateCoupon, getCouponAPI, getCouponById, applyCoupon
 }
