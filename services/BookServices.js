@@ -240,16 +240,35 @@ const getBooksByGenreService = async (id_genre, id) => {
     }
 };
 
-const getNewBooksService = async ({ page, limit, all }) => {
+const getNewBooksService = async ({ page, limit, all, id_genre, sort }) => {
     try {
         page = parseInt(page) || 1;
         limit = parseInt(limit) || 10;
         const offset = (page - 1) * limit;
+
         const matchStage = {};
+        if (id_genre) {
+            matchStage.id_genre = new mongoose.Types.ObjectId(id_genre)
+        }
+
+        // Bước 2: Xác định kiểu sắp xếp
+        let sortStage = { createdAt: -1 }; // Mặc định sắp xếp theo ngày tạo
+        if (sort) {
+            const isDescending = sort.startsWith("-");
+            const sortField = isDescending ? sort.substring(1) : sort;
+            const sortOrder = isDescending ? -1 : 1;
+
+            // Chỉ cho phép sắp xếp theo price_new hoặc name
+            if (["price_new", "name"].includes(sortField)) {
+                sortStage = { [sortField]: sortOrder };
+            }
+        }
+
         const booksQuery = [
             { $match: matchStage },
-            { $sort: { createdAt: -1 } },
+            { $sort: sortStage },
         ];
+
         if (!all) {
             booksQuery.push({ $limit: 10 });
         } else {
@@ -259,7 +278,7 @@ const getNewBooksService = async ({ page, limit, all }) => {
 
         let totalBooks = 0;
         if (all) {
-            totalBooks = await bookModel.countDocuments();
+            totalBooks = await bookModel.countDocuments(matchStage);
         }
         return {
             result,
@@ -278,11 +297,8 @@ const getNewBooksService = async ({ page, limit, all }) => {
 const searchBooksService = async (searchQuery) => {
     try {
         if (!searchQuery) return [];
-
         const regex = new RegExp(searchQuery, "i");
-
         const result = await bookModel.aggregate([
-            // Lookup để join với thể loại
             {
                 $lookup: {
                     from: "genres",
@@ -291,9 +307,8 @@ const searchBooksService = async (searchQuery) => {
                     as: "genre"
                 }
             },
-            { $unwind: "$genre" }, // Gỡ mảng thể loại
+            { $unwind: "$genre" },
 
-            // Lookup để join với tác giả
             {
                 $lookup: {
                     from: "authors",
@@ -302,20 +317,17 @@ const searchBooksService = async (searchQuery) => {
                     as: "authorData"
                 }
             },
-
-            // Tạo bộ lọc tìm kiếm
             {
                 $match: {
                     $or: [
-                        { name: regex }, // Tìm theo tên sách
-                        { "genre.name": regex }, // Tìm theo tên thể loại
-                        { "authorData.name": regex }, // Tìm theo tên tác giả
-                        { publishers: regex } // Tìm theo nhà xuất bản
+                        { name: regex },
+                        { "genre.name": regex },
+                        { "authorData.name": regex },
+                        { publishers: regex }
                     ]
                 }
             },
 
-            // Chỉ lấy 5 kết quả
             { $limit: 5 },
             {
                 $project: {

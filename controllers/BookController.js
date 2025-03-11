@@ -290,9 +290,8 @@ const getBooksByGenreAPI = async (req, res) => {
 
 const getNewBooksAPI = async (req, res) => {
     try {
-        const { page, limit, all } = req.query;
-
-        const { result, meta } = await getNewBooksService({ page, limit, all });
+        const { page, limit, all, id_genre, sort } = req.query;
+        const { result, meta } = await getNewBooksService({ page, limit, all, id_genre, sort });
 
         return res.status(200).json({
             statusCode: 200,
@@ -318,9 +317,10 @@ const searchBooksAPI = async (req, res) => {
         const result = await searchBooksService(search);
 
         if (!result) {
-            return res.status(500).json({ 
+            return res.status(500).json({
                 statusCode: 500,
-                message: "Lỗi khi tìm kiếm" });
+                message: "Lỗi khi tìm kiếm"
+            });
         }
 
         return res.status(200).json({
