@@ -1,5 +1,5 @@
 const { getAllUserService, createUserService,
-    loginUserService
+    loginUserService, getUserByTokenService
 } = require('../services/UserServices')
 
 
@@ -84,7 +84,44 @@ const loginUserAPI = async (req, res) => {
 
 }
 
+const getUserAccount = async (req, res) => {
+    try {
+        const authHeader = req.headers.authorization;
+        const token = authHeader?.startsWith("Bearer ") ? authHeader.split(" ")[1] : null;
+        const result = await getUserByTokenService(token);
+        return res.status(200).json({
+            statusCode: 200,
+            message: "Get Account",
+            data: {
+                user: result
+            }
+        });
+
+    } catch (error) {
+        return res.status(error.status || 500).json({ message: error.message || "Server Error" });
+    }
+};
+
+const logoutUserAPI = async (req, res) => {
+    try {
+        const authHeader = req.headers.authorization;
+        const token = authHeader?.startsWith("Bearer ") ? authHeader.split(" ")[1] : null;
+
+        if (!token) {
+            return res.status(401).json({ message: "Unauthorized" });
+        }
+
+        return res.status(200).json({
+            "message": "Đăng xuất thành công!",
+            "statusCode": 201,
+            "data": "Logout success.",
+        });
+    } catch (error) {
+        return res.status(500).json({ message: "Lỗi khi đăng xuất", error: error.message });
+    }
+};
+
 module.exports = {
-    getUsersAPI, postCreateUserAPI, loginUserAPI
+    getUsersAPI, postCreateUserAPI, loginUserAPI, getUserAccount, logoutUserAPI
 }
 

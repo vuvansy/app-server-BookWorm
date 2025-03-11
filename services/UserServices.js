@@ -2,6 +2,7 @@ const userModel = require("../models/UserModels");
 const aqp = require('api-query-params');
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
+require("dotenv").config();
 
 const getAllUserService = async (limit, page, fullName, queryString) => {
     try {
@@ -81,6 +82,15 @@ const loginUserService = async (email, password) => {
                 statusCode: 400
             };
         }
+
+        if (result.isBlocked) {
+            return {
+                message: "Tài khoản của bạn đã bị khóa, vui lòng liên hệ quản trị viên!",
+                error: "Forbidden",
+                statusCode: 403
+            };
+        }
+
         const isMatch = bcrypt.compareSync(password, result.password);
         if (!isMatch) {
             return {
@@ -91,17 +101,31 @@ const loginUserService = async (email, password) => {
         }
 
         if (result && bcrypt.compareSync(password, result.password)) {
-            const access_token = jwt.sign({ result }, "shhhhh", {
-                expiresIn: 1 * 60,
-            });
-            const refresh_token = jwt.sign({ result }, "shhhhh", {
-                expiresIn: 90 * 24 * 60 * 60,
-            });
-            // access token là chuỗi ngẫu nhiên, dùng để xác thực người dùng
-            // refresh token là chuỗi ngẫu nhiên, dùng để lấy lại access token
-            return {
+            const userData = {
+                id: result._id,
+                fullName: result.fullName,
+                email: result.email,
+                phone: result.phone,
+                role: result.role,
+                image: result.image || null,
+                address: result.address
+            };
 
-                message: "Login",
+            // Tạo access_token với userData
+            const access_token = jwt.sign(
+                userData,
+                process.env.ACCESS_TOKEN_SECRET,
+                { expiresIn: process.env.ACCESS_TOKEN_EXPIRES }
+            );
+
+            // Chỉ lưu id vào refresh_token để giảm kích thước token
+            const refresh_token = jwt.sign(
+                { id: result._id },
+                process.env.REFRESH_TOKEN_SECRET,
+                { expiresIn: process.env.REFRESH_TOKEN_EXPIRES }
+            );
+            return {
+                message: "Đăng nhập thành công",
                 statusCode: 201,
                 data: {
                     access_token,
@@ -112,7 +136,8 @@ const loginUserService = async (email, password) => {
                         email: result.email,
                         phone: result.phone,
                         role: result.role,
-                        avatar: result.avatar,
+                        image: result.image,
+                        address: result.address
                     },
                 },
             };
@@ -128,6 +153,21 @@ const loginUserService = async (email, password) => {
     }
 }
 
+const getUserByTokenService = async (token) => {
+    try {
+        if (!token) throw { status: 401, message: "Unauthorized" };
+
+        const result = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
+        if (!result) throw { status: 403, message: "Invalid token" };
+
+        return result;
+    } catch (error) {
+        throw error;
+    }
+};
+
+
+
 module.exports = {
-    getAllUserService, createUserService, loginUserService
+    getAllUserService, createUserService, loginUserService, getUserByTokenService
 }
