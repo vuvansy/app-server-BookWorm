@@ -80,11 +80,16 @@ const updateUserService = async (id, userData) => {
             return { error: "Người dùng không tồn tại!" };
         }
 
-        if (password !== confirm_password) {
-            return { error: "Mật khẩu xác nhận không trùng khớp!" };
+        let newPassword = user.password; // Giữ nguyên mật khẩu cũ
+
+        // Kiểm tra nếu người dùng nhập password mới
+        if (password && password.trim() !== "") {
+            if (password !== confirm_password) {
+                return { error: "Mật khẩu xác nhận không trùng khớp!" };
+            }
+            const salt = bcrypt.genSaltSync(10);
+            newPassword = bcrypt.hashSync(password, salt);
         }
-        const salt = bcrypt.genSaltSync(10);
-        const hash = bcrypt.hashSync(password, salt);
 
         const updatedUser = await userModel.findByIdAndUpdate(
             id,
@@ -95,7 +100,7 @@ const updateUserService = async (id, userData) => {
                 role: role || user.role,
                 address: address || user.address,
                 image: image || user.image || "/avatar.jpg",
-                password: hash
+                password: newPassword, // Cập nhật mật khẩu mới nếu có
             },
             { new: true } // Trả về dữ liệu mới sau khi cập nhật
         );
