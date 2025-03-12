@@ -80,9 +80,8 @@ const updateUserService = async (id, userData) => {
             return { error: "Người dùng không tồn tại!" };
         }
 
-        let newPassword = user.password; // Giữ nguyên mật khẩu cũ
+        let newPassword = user.password;
 
-        // Kiểm tra nếu người dùng nhập password mới
         if (password && password.trim() !== "") {
             if (password !== confirm_password) {
                 return { error: "Mật khẩu xác nhận không trùng khớp!" };
@@ -100,9 +99,9 @@ const updateUserService = async (id, userData) => {
                 role: role || user.role,
                 address: address || user.address,
                 image: image || user.image || "/avatar.jpg",
-                password: newPassword, // Cập nhật mật khẩu mới nếu có
+                password: newPassword, 
             },
-            { new: true } // Trả về dữ liệu mới sau khi cập nhật
+            { new: true } 
         );
 
         return { data: updatedUser };

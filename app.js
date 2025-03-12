@@ -25,6 +25,7 @@ var booksRouter = require('./routes/books');
 var genresRouter = require('./routes/genre');
 var authorRouter = require('./routes/author');
 var couponRouter = require('./routes/coupon');
+var orderRouter = require('./routes/order');
 var deliveryRouter = require('./routes/delivery');
 var vnpayRouter = require('./routes/vnpay');
 
@@ -58,6 +59,7 @@ app.use('/api/v1', authorRouter);
 app.use('/api/v1', authRouter);
 app.use('/api/v1', couponRouter);
 app.use('/api/v1', deliveryRouter);
+app.use('/api/v1', orderRouter);
 app.use('/vnpay', vnpayRouter);
 
 

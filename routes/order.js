@@ -2,12 +2,12 @@ var express = require('express');
 var router = express.Router();
 
 const {
-    getOrderAPI, postCreateOrder
+ postCreateOrder
  } = require('../controllers/OrderController')
 
 
-router.get('/genre', getOrderAPI);
-router.post('/genre', postCreateOrder);
+// router.get('/order', getOrderAPI);
+router.post('/order', postCreateOrder);
 
 
 module.exports = router;

@@ -13,10 +13,11 @@ const order = new Schema({
     quantity: { type: String },
     status: {
         type: Number,
-        enum: [0, 1, 2, 3, 4], // Chỉ chấp nhận các giá trị này
+        enum: [0, 1, 2, 3, 4],
         default: 0, // 0 = Chờ xử lý (pending)
     },
     shippingPrice: { type: Number, required: true, default: 0 },
+    discountAmount: { type: Number, default: 0 }, // Lưu số tiền giảm giá
     order_total: { type: Number, required: true },
     quantity: { type: Number, required: true },
     isPaid: { type: Boolean, default: false },
