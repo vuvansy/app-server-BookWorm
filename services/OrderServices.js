@@ -6,9 +6,16 @@ const createOrderService = async (orderData) => {
         const { products, discountAmount = 0, shippingPrice,
             id_user, id_payment, id_delivery, id_coupons, isPaid = false } = orderData;
 
-        // Tính tổng giá trị đơn hàng (chưa bao gồm phí vận chuyển)
+        // Kiểm tra dữ liệu đầu vào
+        if (!products || !Array.isArray(products) || products.length === 0) {
+            return { success: false, message: "Danh sách sản phẩm không hợp lệ!" };
+        }
+        if (!id_user || !id_payment || !id_delivery) {
+            return { success: false, message: "Thiếu thông tin người dùng, phương thức thanh toán hoặc vận chuyển!" };
+        }
+
         let order_total = products.reduce((total, product) => {
-            return total + (product.detail?.price_new || 0) * product.quantity; // Kiểm tra null safety
+            return total + (product.detail?.price_new || 0) * product.quantity;
         }, 0) - discountAmount;
 
         const result = await orderModel.create({
@@ -22,7 +29,7 @@ const createOrderService = async (orderData) => {
             discountAmount,
             shippingPrice,
             isPaid,
-            paidAt: isPaid ? new Date() : null, // Nếu thanh toán thì lưu thời gian
+            paidAt: isPaid ? new Date() : null,
             id_user,
             id_payment,
             id_delivery,

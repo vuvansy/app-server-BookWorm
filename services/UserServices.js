@@ -20,9 +20,14 @@ const getAllUserService = async (limit, page, fullName, queryString) => {
                 }
             });
 
-            result = await userModel.find(filter).skip(offset).limit(limit).exec();
+            result = await userModel
+                .find(filter)
+                .sort({ createdAt: -1 }) 
+                .skip(offset)
+                .limit(limit)
+                .exec();
         } else {
-            result = await userModel.find({});
+            result = await userModel.find({}).sort({ createdAt: -1 }); 
         }
 
         const total = await userModel.countDocuments({});
@@ -99,9 +104,9 @@ const updateUserService = async (id, userData) => {
                 role: role || user.role,
                 address: address || user.address,
                 image: image || user.image || "/avatar.jpg",
-                password: newPassword, 
+                password: newPassword,
             },
-            { new: true } 
+            { new: true }
         );
 
         return { data: updatedUser };

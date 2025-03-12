@@ -15,10 +15,14 @@ const getAllGenreService = async (limit, page, name, queryString) => {
                     filter[key] = { $regex: filter[key], $options: "i" };
                 }
             });
-
-            result = await genreModel.find(filter).skip(offset).limit(limit).exec();
+            result = await genreModel
+                .find(filter)
+                .sort({ createdAt: -1 }) // Sắp xếp mới nhất đến cũ nhất
+                .skip(offset)
+                .limit(limit)
+                .exec();
         } else {
-            result = await genreModel.find({});
+            result = await genreModel.find({}).sort({ createdAt: -1 }); // Sắp xếp mặc định
         }
 
         const total = await genreModel.countDocuments({});
