@@ -1,5 +1,6 @@
 const { getAllUserService, createUserService,
-    loginUserService, getUserByTokenService
+    loginUserService, getUserByTokenService,
+    updateUserService, blockUserService, deleteUserService
 } = require('../services/UserServices')
 
 
@@ -63,6 +64,71 @@ const postCreateUserAPI = async (req, res) => {
     }
 }
 
+const deleteUser = async (req, res) => {
+    let { id } = req.params;
+    try {
+        let result = await deleteUserService(id);
+        if (!result) {
+            return res.status(404).json({
+                "statusCode": 404,
+                "message": `Không tìm thấy User với id = ${id} để xóa.`,
+                "data": null
+            });
+        }
+
+        return res.status(200).json({
+            "statusCode": 200,
+            "message": "Xóa User thành công!",
+            data: result
+        });
+    } catch (error) {
+        return res.status(500).json({
+            "statusCode": 500,
+            "message": "Lỗi khi xóa User.",
+            "error": error.message
+        });
+    }
+};
+
+const updateUserAPI = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const result = await updateUserService(id, req.body);
+
+        if (result.error) {
+            return res.status(400).json({
+                statusCode: 400,
+                message: result.error,
+            });
+        }
+
+        return res.status(200).json({
+            statusCode: 200,
+            message: "Cập nhật người dùng thành công!",
+            data: result.data,
+        });
+    } catch (error) {
+        return res.status(500).json({
+            statusCode: 500,
+            message: "Lỗi máy chủ!",
+            error: error.message,
+        });
+    }
+};
+
+const blockUserAPI = async (req, res) => {
+    try {
+        const result = await blockUserService(req.params.id);
+        return res.status(200).json({
+            "statusCode": 201,
+            "message": `Người dùng đã ${result ? "bị khóa" : "được mở khóa"}`,
+            "data": result
+        });
+    } catch (error) {
+        return res.status(500).json({ message: error.message });
+    }
+};
+
 const loginUserAPI = async (req, res) => {
     try {
         const { email, password } = req.body;
@@ -122,6 +188,7 @@ const logoutUserAPI = async (req, res) => {
 };
 
 module.exports = {
-    getUsersAPI, postCreateUserAPI, loginUserAPI, getUserAccount, logoutUserAPI
+    getUsersAPI, postCreateUserAPI, loginUserAPI, getUserAccount, logoutUserAPI,
+    updateUserAPI, blockUserAPI, deleteUser
 }
 

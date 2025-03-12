@@ -71,6 +71,68 @@ const createUserService = async (userData) => {
     }
 }
 
+const updateUserService = async (id, userData) => {
+    try {
+        const { fullName, email, phone, image, role, password, confirm_password, address } = userData;
+
+        const user = await userModel.findById(id);
+        if (!user) {
+            return { error: "Người dùng không tồn tại!" };
+        }
+
+        if (password !== confirm_password) {
+            return { error: "Mật khẩu xác nhận không trùng khớp!" };
+        }
+        const salt = bcrypt.genSaltSync(10);
+        const hash = bcrypt.hashSync(password, salt);
+
+        const updatedUser = await userModel.findByIdAndUpdate(
+            id,
+            {
+                fullName: fullName || user.fullName,
+                email: email || user.email,
+                phone: phone || user.phone,
+                role: role || user.role,
+                address: address || user.address,
+                image: image || user.image || "/avatar.jpg",
+                password: hash
+            },
+            { new: true } // Trả về dữ liệu mới sau khi cập nhật
+        );
+
+        return { data: updatedUser };
+    } catch (error) {
+        console.error("Lỗi khi cập nhật người dùng:", error.message);
+        throw new Error(error.message);
+    }
+};
+
+const deleteUserService = async (id) => {
+    try {
+        let result = await userModel.deleteById(id);
+        if (!result) {
+            throw new Error("Không tồn tại người dùng này.");
+        }
+        return result;
+    } catch (error) {
+        console.log("error >>>> ", error);
+        return null;
+    }
+};
+
+const blockUserService = async (id) => {
+    const result = await userModel.findById(id);
+    if (!result) {
+        throw new Error("Người dùng không tồn tại");
+    }
+
+    // Đảo trạng thái khóa
+    result.isBlocked = !result.isBlocked;
+    await result.save();
+
+    return result.isBlocked;
+};
+
 const loginUserService = async (email, password) => {
     try {
         const result = await userModel.findOne({ email });
@@ -169,5 +231,6 @@ const getUserByTokenService = async (token) => {
 
 
 module.exports = {
-    getAllUserService, createUserService, loginUserService, getUserByTokenService
+    getAllUserService, createUserService, loginUserService, getUserByTokenService,
+    updateUserService, blockUserService, deleteUserService
 }

@@ -10,10 +10,10 @@ const user = new Schema({
   email: { type: String, required: true, unique: true, match: [/^\S+@\S+\.\S+$/, "Email không hợp lệ!"] },
   image: { type: String },
   address: {
-    city: { key: String, name: String },
-    district: { key: String, name: String },
-    ward: { key: String, name: String },
-    street: { type: String }
+    city: { type: Object, default: null }, // Dùng Object thay vì đặt default trong từng key
+    district: { type: Object, default: null },
+    ward: { type: Object, default: null },
+    street: { type: String, default: "" },
   },
   role: { type: String, enum: ["USER", "ADMIN"], default: "USER" },
   isBlocked: { type: Boolean, default: false },
