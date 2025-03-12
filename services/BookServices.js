@@ -269,12 +269,16 @@ const getNewBooksService = async ({ page, limit, all, id_genre, sort }) => {
             { $sort: sortStage },
         ];
 
-        if (!all) {
-            booksQuery.push({ $limit: 10 });
-        } else {
+        if (all) {
             booksQuery.push({ $skip: offset }, { $limit: limit });
+        } else {
+            booksQuery.push({ $limit: 10 });
         }
         const result = await bookModel.aggregate(booksQuery);
+
+        if (!all) {
+            return { result };
+        }
 
         let totalBooks = 0;
         if (all) {
@@ -282,12 +286,12 @@ const getNewBooksService = async ({ page, limit, all, id_genre, sort }) => {
         }
         return {
             result,
-            meta: all ? {
-                page: page,
-                limit: limit,
+            meta: {
+                page,
+                limit,
                 total: totalBooks,
                 pages: Math.ceil(totalBooks / limit)
-            } : null
+            }
         };
     } catch (error) {
         throw new Error(error.message);

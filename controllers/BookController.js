@@ -292,12 +292,21 @@ const getNewBooksAPI = async (req, res) => {
     try {
         const { page, limit, all, id_genre, sort } = req.query;
         const { result, meta } = await getNewBooksService({ page, limit, all, id_genre, sort });
+        if (!all) {
+            return res.status(200).json({
+                statusCode: 200,
+                message: "Danh sách sách",
+                data: result
+            });
+        }
 
         return res.status(200).json({
             statusCode: 200,
-            message: "Lấy danh sách Book new thành công!",
-            meta,
-            data: result
+            message: "Danh sách sách có phân trang",
+            data: {
+                meta,
+                result
+            }
         });
     } catch (error) {
         console.error("Lỗi khi lấy danh sách flash sale:", error);
