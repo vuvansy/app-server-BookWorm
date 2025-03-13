@@ -89,8 +89,6 @@ const getAllBookService = async (limit, page, name, queryString) => {
     }
 };
 
-
-
 const getBookByIdService = async (id) => {
     try {
         const result = await bookModel.findById(id)
