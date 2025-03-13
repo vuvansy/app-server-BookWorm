@@ -4,24 +4,25 @@ const {
 
 const postCreateOrderDetail = async (req, res) => {
     try {
-        let { quantity, price, id_book, id_order } = req.body;
-        if (!quantity || !price || !id_book || !id_order) {
-            return res.status(400).json(
-                {
-                    message: 'Vui lòng nhập đầy đủ thông tin!'
-
-                });
+        const orderDetails = req.body;
+        if (!Array.isArray(orderDetails) || orderDetails.length === 0) {
+            return res.status(400).json({ message: 'Vui lòng nhập đầy đủ thông tin!' });
         }
 
-        const orderDetail = { quantity, price, id_book, id_order }
-        const result = await createOrderDetailService(orderDetail);
+        for (const item of orderDetails) {
+            if (!item.quantity || !item.price || !item.id_book || !item.id_order) {
+                return res.status(400).json({ message: 'Vui lòng nhập đầy đủ thông tin trong mỗi sản phẩm!' });
+            }
+        }
+        const result = await createOrderDetailService(orderDetails);
 
-        if (!result) {
+        if (!result.success) {
             return res.status(500).json({
                 message: result.message,
                 error: result.error,
             });
         }
+
 
         return res.status(201).json({
             statusCode: 200,

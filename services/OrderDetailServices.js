@@ -1,20 +1,15 @@
 const orderDetailModel = require("../models/OrderDetailModels");
 const aqp = require('api-query-params');
 
-const createOrderDetailService = async (orderDetail) => {
+const createOrderDetailService = async (orderDetails) => {
     try {
-        let result = await orderDetailModel.create({
-            id_book: orderDetail.id_book,
-            id_order: orderDetail.id_order,
-            quantity: orderDetail.quantity,
-            price: orderDetail.price
-        })
-        return result;
+        let result = await orderDetailModel.insertMany(orderDetails);
+        return { success: true, data: result };
     } catch (error) {
         console.log(error);
-        return null;
+        return { success: false, message: "Lỗi khi tạo đơn hàng chi tiết", error };
     }
-}
+};
 
 module.exports = {
     createOrderDetailService
