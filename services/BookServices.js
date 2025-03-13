@@ -7,31 +7,28 @@ const getAllBookService = async (limit, page, name, queryString) => {
     try {
         let result = null;
         let filter = {};
-        // const { filter: queryFilter } = aqp(queryString);
         const parsedQuery = aqp(queryString);
         const queryFilter = parsedQuery.filter || {};
         const querySort = parsedQuery.sort || {};
 
         delete queryFilter.page;
 
+        // 🔹 Lọc theo thể loại (genre)
         if (queryString.id_genre) {
-            let genres = [];
-
-            if (Array.isArray(queryString.id_genre)) {
-                genres = queryString.id_genre;
-            } else if (typeof queryString.id_genre === "string") {
-                genres = queryString.id_genre.split(",");
-            }
+            let genres = Array.isArray(queryString.id_genre)
+                ? queryString.id_genre
+                : queryString.id_genre.split(",");
 
             genres = genres.map(id => new mongoose.Types.ObjectId(id));
             filter.id_genre = { $in: genres };
         }
 
-
+        // 🔹 Lọc theo tên sách (name)
         if (queryFilter.name) {
             filter.name = { $regex: queryFilter.name, $options: 'i' };
         }
 
+        // 🔹 Lọc theo giá (price)
         if (queryFilter.price_min || queryFilter.price_max) {
             filter.price_new = {};
             if (queryFilter.price_min) {
@@ -42,10 +39,20 @@ const getAllBookService = async (limit, page, name, queryString) => {
             }
         }
 
+        // 🔹 Lọc theo tác giả (authors)
+        if (queryString.authors) {
+            let authors = Array.isArray(queryString.authors)
+                ? queryString.authors
+                : queryString.authors.split(",");
+
+            authors = authors.map(id => new mongoose.Types.ObjectId(id));
+            filter.authors = { $in: authors };
+        }
+
+        // 🔹 Sắp xếp dữ liệu
         let sort = {};
         if (queryString.sort) {
             let sortField = queryString.sort;
-
             if (sortField.startsWith('-')) {
                 sortField = sortField.substring(1);
                 sort[sortField] = -1;
@@ -56,7 +63,7 @@ const getAllBookService = async (limit, page, name, queryString) => {
             sort = { createdAt: -1 };
         }
 
-
+        // 🔹 Lấy danh sách sách theo phân trang hoặc toàn bộ
         if (page && limit) {
             let offset = (page - 1) * limit;
             result = await bookModel.find(filter)
@@ -81,6 +88,7 @@ const getAllBookService = async (limit, page, name, queryString) => {
         return null;
     }
 };
+
 
 
 const getBookByIdService = async (id) => {
