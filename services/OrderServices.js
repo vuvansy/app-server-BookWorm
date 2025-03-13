@@ -19,7 +19,7 @@ const createOrderService = async (orderData) => {
         }, 0) - discountAmount;
 
         const result = await orderModel.create({
-            fullname: orderData.fullname,
+            fullName: orderData.fullName,
             phone: orderData.phone,
             email: orderData.email || null,
             address: orderData.address,

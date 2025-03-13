@@ -5,12 +5,16 @@ const ObjectId = Schema.ObjectId;
 
 const order = new Schema({
     id: { type: ObjectId },
-    fullname: { type: String, required: true },
+    fullName: { type: String, required: true },
     phone: { type: String, match: /^[0-9]{10,15}$/, required: true },
     email: { type: String, match: /^\S+@\S+\.\S+$/, default: null },
-    address: { type: String, required: true },
+    address: {
+        city: { type: Object, default: null },
+        district: { type: Object, default: null },
+        ward: { type: Object, default: null },
+        street: { type: String, default: "" },
+    },
     note: { type: String },
-    quantity: { type: String },
     status: {
         type: Number,
         enum: [0, 1, 2, 3, 4],
