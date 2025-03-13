@@ -1,5 +1,5 @@
 const {
-    createOrderDetailService
+    createOrderDetailService, getOrderDetailsByOrderIdService
 } = require('../services/OrderDetailServices')
 
 const postCreateOrderDetail = async (req, res) => {
@@ -34,6 +34,31 @@ const postCreateOrderDetail = async (req, res) => {
     }
 };
 
+const getOrderDetails = async (req, res) => {
+    try {
+        const { id_order } = req.params;
+
+        if (!id_order) {
+            return res.status(400).json({ message: "Thiếu id_order!" });
+        }
+
+        const result = await getOrderDetailsByOrderIdService(id_order);
+
+        if (!result.success) {
+            return res.status(404).json({ message: result.message });
+        }
+
+        return res.status(200).json({
+            statusCode: 200,
+            message: "Lấy chi tiết đơn hàng thành công!",
+            data: result.data,
+        });
+    } catch (error) {
+        return res.status(500).json({ message: "Lỗi hệ thống", error: error.message });
+    }
+};
+
+
 module.exports = {
-    postCreateOrderDetail
+    postCreateOrderDetail, getOrderDetails
 }

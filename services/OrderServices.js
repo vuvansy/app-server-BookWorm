@@ -62,11 +62,12 @@ const getOrdersByUserService = async (id_user) => {
             return { success: false, message: "Thiếu ID người dùng!" };
         }
 
-        const orders = await orderModel.find({ id_user }).sort({ createdAt: -1 });
+        const orders = await orderModel
+            .find({ id_user })
+            .sort({ createdAt: -1 })
+            .populate("id_payment")
+            .populate("id_delivery");
 
-        if (!orders || orders.length === 0) {
-            return { success: false, message: "Không tìm thấy đơn hàng nào!" };
-        }
 
         return { success: true, data: orders };
     } catch (error) {
