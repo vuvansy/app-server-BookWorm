@@ -75,6 +75,28 @@ const getOrdersByUserService = async (id_user) => {
     }
 };
 
+const getOrderDetailByIdService = async (id_order) => {
+    try {
+        if (!id_order) {
+            return { success: false, message: "Thiếu ID đơn hàng!" };
+        }
+
+        const result = await orderModel
+            .findById(id_order)
+            .populate("id_payment")
+            .populate("id_delivery")
+
+        if (!result) {
+            return { success: false, message: "Không tìm thấy đơn hàng!" };
+        }
+
+        return { success: true, data: result };
+    } catch (error) {
+        return { success: false, message: "Lỗi hệ thống khi lấy thông tin đơn hàng", error: error.message };
+    }
+};
+
 module.exports = {
-    createOrderService, getOrdersByUserService
+    createOrderService, getOrdersByUserService,
+    getOrderDetailByIdService
 }

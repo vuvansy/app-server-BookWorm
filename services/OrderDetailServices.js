@@ -13,7 +13,7 @@ const createOrderDetailService = async (orderDetails) => {
 
 const getOrderDetailsByOrderIdService = async (id_order) => {
     try {
-        const result = await orderDetailModel.find({ id_order }).populate("id_book");
+        const result = await orderDetailModel.find({ id_order }).populate("id_book").populate("id_order");
 
         if (!result.length) {
             return { success: false, message: "Không tìm thấy chi tiết đơn hàng!" };
