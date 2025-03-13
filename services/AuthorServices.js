@@ -54,7 +54,7 @@ const updateAuthorService = async (id, name) => {
 
 const deleteAuthorService = async (id) => {
     try {
-        let author = await authorModel.findByIdAndDelete(id);
+        let author = await authorModel.deleteById(id);
         if (!author) {
             return null;
         }

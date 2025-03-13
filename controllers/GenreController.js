@@ -138,10 +138,10 @@ const deleteAGenre = async (req, res) => {
             "data": result
         });
     } catch (error) {
-        return res.status(500).json({
-            "statusCode": 500,
-            "message": "Lỗi khi xóa Genre.",
-            "error": error.message
+        return res.status(400).json({
+            "statusCode": 400,
+            "message": error.message, // Trả về message từ Error
+            "error": "Bad Request"
         });
     }
 }

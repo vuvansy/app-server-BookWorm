@@ -7,7 +7,9 @@ const {
     getFlashSaleBooksService,
     getBooksByGenreService,
     getNewBooksService,
-    searchBooksService
+    searchBooksService,
+    getDeletedBooksService,
+    restoreDeletedBookService
 
 } = require('../services/BookServices')
 
@@ -343,6 +345,78 @@ const searchBooksAPI = async (req, res) => {
     }
 };
 
+const getDeletedBooksAPI = async (req, res) => {
+    let { limit, page } = req.query;
+    limit = limit ? Number(limit) : null;
+    page = page ? Number(page) : null;
+
+    try {
+        let data = await getDeletedBooksService(limit, page);
+        if (!data) {
+            return res.status(500).json({
+                statusCode: 500,
+                message: "Lỗi khi lấy danh sách sách đã xóa mềm",
+                data: null
+            });
+        }
+
+        if (limit && page) {
+            return res.status(200).json({
+                statusCode: 200,
+                message: "Danh sách sách đã xóa mềm có phân trang",
+                data: {
+                    meta: {
+                        page,
+                        limit,
+                        pages: Math.ceil(data.total / limit),
+                        total: data.total
+                    },
+                    result: data.result
+                }
+            });
+        } else {
+            return res.status(200).json({
+                statusCode: 200,
+                message: "Danh sách sách đã xóa mềm",
+                data: data.result
+            });
+        }
+    } catch (error) {
+        return res.status(500).json({
+            statusCode: 500,
+            message: "Lỗi máy chủ khi lấy danh sách sách đã xóa mềm",
+            error: error.message
+        });
+    }
+};
+
+const restoreDeletedBookAPI = async (req, res) => {
+    let { id } = req.params;
+
+    try {
+        const restoredBook = await restoreDeletedBookService(id);
+
+        if (!restoredBook) {
+            return res.status(404).json({
+                statusCode: 404,
+                message: `Không tìm thấy sách với id = ${id} hoặc sách chưa bị xóa.`,
+                data: null
+            });
+        }
+
+        return res.status(200).json({
+            statusCode: 200,
+            message: "Khôi phục sách thành công!",
+            data: restoredBook
+        });
+    } catch (error) {
+        return res.status(500).json({
+            statusCode: 500,
+            message: "Lỗi server khi khôi phục sách.",
+            error: error.message
+        });
+    }
+};
 
 
 module.exports = {
@@ -354,6 +428,8 @@ module.exports = {
     getFlashSaleBooks,
     getBooksByGenreAPI,
     getNewBooksAPI,
-    searchBooksAPI
+    searchBooksAPI,
+    getDeletedBooksAPI,
+    restoreDeletedBookAPI
 
 }

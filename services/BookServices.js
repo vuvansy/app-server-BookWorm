@@ -354,6 +354,55 @@ const searchBooksService = async (searchQuery) => {
     }
 };
 
+const getDeletedBooksService = async (limit, page) => {
+    try {
+        let result = null;
+        let query = bookModel.findDeleted(); // Chỉ lấy sách đã xóa mềm
+
+        if (limit && page) {
+            let offset = (page - 1) * limit;
+            result = await query
+                .skip(offset)
+                .limit(limit)
+                .sort({ deletedAt: -1 })
+                .populate("id_genre", "name")
+                .populate("authors", "name")
+                .exec();
+        } else {
+            result = await query
+                .sort({ deletedAt: -1 })
+                .populate("id_genre", "name")
+                .populate("authors", "name")
+                .exec();
+        }
+
+        const total = await bookModel.countDocumentsDeleted();
+        return { result, total };
+    } catch (error) {
+        console.log("Lỗi khi lấy danh sách sách đã xóa mềm >>>>", error);
+        return null;
+    }
+};
+
+const restoreDeletedBookService = async (id) => {
+    try {
+        const book = await bookModel.findOneWithDeleted({ _id: id });
+
+        if (!book || !book.deleted) {
+            return null; 
+        }
+
+        // Khôi phục sách
+        await book.restore();
+
+        return book;
+    } catch (error) {
+        console.log("Error restoring book:", error);
+        return null;
+    }
+};
+
+
 
 module.exports = {
     getAllBookService,
@@ -364,5 +413,7 @@ module.exports = {
     getFlashSaleBooksService,
     getBooksByGenreService,
     getNewBooksService,
-    searchBooksService
+    searchBooksService,
+    getDeletedBooksService,
+    restoreDeletedBookService
 }
