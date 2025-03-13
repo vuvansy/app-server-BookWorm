@@ -96,7 +96,30 @@ const getOrderDetailByIdService = async (id_order) => {
     }
 };
 
+const updateOrderStatusService = async (id_order, new_status) => {
+    try {
+        if (!id_order || new_status === undefined) {
+            return { success: false, message: "Thiếu thông tin đơn hàng hoặc trạng thái mới!" };
+        }
+
+        const updatedOrder = await orderModel.findByIdAndUpdate(
+            id_order,
+            { status: new_status },
+            { new: true } // Trả về dữ liệu sau khi cập nhật
+        );
+
+        if (!updatedOrder) {
+            return { success: false, message: "Không tìm thấy đơn hàng!" };
+        }
+
+        return { success: true, data: updatedOrder };
+    } catch (error) {
+        return { success: false, message: "Lỗi hệ thống khi cập nhật trạng thái đơn hàng", error: error.message };
+    }
+};
+
+
 module.exports = {
     createOrderService, getOrdersByUserService,
-    getOrderDetailByIdService
+    getOrderDetailByIdService, updateOrderStatusService
 }

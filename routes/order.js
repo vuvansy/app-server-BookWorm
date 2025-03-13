@@ -2,7 +2,8 @@ var express = require('express');
 var router = express.Router();
 
 const {
-    postCreateOrder, getOrdersByUser, getOrderDetailById
+    postCreateOrder, getOrdersByUser, getOrderDetailById,
+    updateOrderStatus
 } = require('../controllers/OrderController')
 
 
@@ -10,5 +11,6 @@ const {
 router.post('/order', postCreateOrder);
 router.get("/order/:id_user", getOrdersByUser);
 router.get("/order-id/:id_order", getOrderDetailById);
+router.put("/order/update-status/:id_order", updateOrderStatus);
 
 module.exports = router;
