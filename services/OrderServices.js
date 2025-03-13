@@ -1,4 +1,5 @@
 const orderModel = require("../models/OrderModels");
+const couponModel = require("../models/CouponModels");
 const aqp = require('api-query-params');
 
 const createOrderService = async (orderData) => {
@@ -35,6 +36,19 @@ const createOrderService = async (orderData) => {
             id_delivery,
             id_coupons: id_coupons || null
         });
+
+        if (id_coupons) {
+            const coupon = await couponModel.findById(id_coupons);
+            if (!coupon) {
+                return { success: false, message: "Mã giảm giá không tồn tại!" };
+            }
+            if (coupon.quantity <= 0) {
+                return { success: false, message: "Mã giảm giá đã hết lượt sử dụng!" };
+            }
+            // Giảm số lượng coupon
+            coupon.quantity -= 1;
+            await coupon.save();
+        }
 
         return { success: true, result };
     } catch (error) {
