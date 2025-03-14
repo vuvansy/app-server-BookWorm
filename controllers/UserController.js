@@ -139,16 +139,32 @@ const loginUserAPI = async (req, res) => {
     try {
         const { email, password } = req.body;
         if (!email || !password) {
-            return res.status(400).json(
-                {
-                    "message": "Unauthorized",
-                    "statusCode": 401
-                }
-            )
+            return res.status(400).json({
+                message: "Thiếu email hoặc mật khẩu!",
+                statusCode: 400
+            });
         }
-        const result = await loginUserService(email, password);
 
-        return res.status(200).json(result);
+        const result = await loginUserService(email, password);
+        if (result.statusCode !== 200) {
+            return res.status(result.statusCode).json(result);
+        }
+        // Lưu refresh_token vào HTTP-Only Cookie
+        res.cookie("refresh_token", result.data.refresh_token, {
+            httpOnly: true,
+            secure: true, // Chỉ gửi qua HTTPS khi deploy
+            sameSite: "Strict",
+            maxAge: 7 * 24 * 60 * 60 * 1000, // 7 ngày
+        });
+
+        return res.status(200).json({
+            message: "Đăng nhập thành công!",
+            statusCode: 200,
+            data: {
+                access_token: result.data.access_token,
+                user: result.data.user
+            }
+        });
     } catch (error) {
         console.error("API Login Error:", error);
         return res.status(500).json({ statusCode: 500, message: "Lỗi server" });

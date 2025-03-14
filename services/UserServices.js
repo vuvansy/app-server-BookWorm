@@ -171,7 +171,6 @@ const loginUserService = async (email, password) => {
             };
         }
 
-        if (result && bcrypt.compareSync(password, result.password)) {
             const userData = {
                 id: result._id,
                 fullName: result.fullName,
@@ -182,14 +181,12 @@ const loginUserService = async (email, password) => {
                 address: result.address
             };
 
-            // Tạo access_token với userData
             const access_token = jwt.sign(
                 userData,
                 process.env.ACCESS_TOKEN_SECRET,
                 { expiresIn: process.env.ACCESS_TOKEN_EXPIRES }
             );
 
-            // Chỉ lưu id vào refresh_token để giảm kích thước token
             const refresh_token = jwt.sign(
                 { id: result._id },
                 process.env.REFRESH_TOKEN_SECRET,
@@ -197,7 +194,7 @@ const loginUserService = async (email, password) => {
             );
             return {
                 message: "Đăng nhập thành công",
-                statusCode: 201,
+                statusCode: 200,
                 data: {
                     access_token,
                     refresh_token,
@@ -212,12 +209,7 @@ const loginUserService = async (email, password) => {
                     },
                 },
             };
-        } else {
-            res.json({
-                status: 300,
-                message: "Sai tên đăng nhập hoặc mật khẩu",
-            });
-        }
+        
     } catch (error) {
         console.error("Login Error:", error);
         return { status: 500, message: "Lỗi server" };
