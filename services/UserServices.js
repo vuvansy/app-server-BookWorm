@@ -22,12 +22,12 @@ const getAllUserService = async (limit, page, fullName, queryString) => {
 
             result = await userModel
                 .find(filter)
-                .sort({ createdAt: -1 }) 
+                .sort({ createdAt: -1 })
                 .skip(offset)
                 .limit(limit)
                 .exec();
         } else {
-            result = await userModel.find({}).sort({ createdAt: -1 }); 
+            result = await userModel.find({}).sort({ createdAt: -1 });
         }
 
         const total = await userModel.countDocuments({});
@@ -237,9 +237,74 @@ const getUserByTokenService = async (token) => {
     }
 };
 
+const forgotPasswordService = async (email) => {
+    const user = await userModel.findOne({ email });
+    if (!user) {
+        return false;
+    }
+
+    const token = jwt.sign({ id: user._id }, "shhhhh", {
+        expiresIn: 5 * 60,
+    });
+    user.reset_token = token;
+    await user.save();
+    return { token: token, fullName: user.fullName };
+
+};
+
+const resetPasswordService = async (token, password) => {
+    const user = await userModel.findOne({ reset_token: token });
+    console.log(user);
+    if (!user) {
+        return false;
+    }
+
+    const salt = bcrypt.genSaltSync(10);
+    const hash = bcrypt.hashSync(password, salt);
+    user.password = hash;
+    user.reset_token = null;
+    await user.save();
+    return true;
+
+};
+
+const changePasswordService = async (userId, current_password, new_password, confirm_password) => {
+    try {
+
+        if (!current_password || !new_password || !confirm_password) {
+            return { success: false, status: 400, message: "Vui lòng nhập đầy đủ thông tin!" };
+        }
+
+        if (new_password !== confirm_password) {
+            return { success: false, status: 400, message: "Mật khẩu mới và xác nhận mật khẩu không trùng khớp!" };
+        }
+
+        const user = await userModel.findById(userId);
+        if (!user) {
+            return { success: false, status: 404, message: "Người dùng không tồn tại!" };
+        }
+
+        const isMatch = await bcrypt.compare(current_password, user.password);
+        if (!isMatch) {
+            return { success: false, status: 401, message: "Mật khẩu hiện tại không đúng!" };
+        }
+
+        const salt = bcrypt.genSaltSync(10);
+        const hashedPassword = bcrypt.hashSync(new_password, salt);
+
+        user.password = hashedPassword;
+        await user.save();
+
+        return { success: true, status: 200, message: "Mật khẩu đã được thay đổi thành công!" };
+    } catch (error) {
+        console.error("Lỗi đổi mật khẩu trong service:", error);
+        return { success: false, status: 500, message: "Lỗi server khi đổi mật khẩu!" };
+    }
+};
 
 
 module.exports = {
     getAllUserService, createUserService, loginUserService, getUserByTokenService,
-    updateUserService, blockUserService, deleteUserService
+    updateUserService, blockUserService, deleteUserService, forgotPasswordService,
+    resetPasswordService, changePasswordService
 }
