@@ -188,7 +188,19 @@ const deleteCouponService = async (id) => {
     }
 };
 
+const updateCouponStatusService = async (id) => {
+    const result = await couponModel.findById(id);
+    if (!result) {
+        throw new Error("Mã giảm giá không tồn tại");
+    }
+
+    result.status = result.status === "active" ? "inactive" : "active";
+    await result.save();
+
+    return result.status;
+};
+
 module.exports = {
     createCouponService, getAllCouponService, getCouponByIdService, applyCouponService,
-    updateCouponService, deleteCouponService
+    updateCouponService, deleteCouponService, updateCouponStatusService
 }

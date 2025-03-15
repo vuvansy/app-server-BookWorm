@@ -1,6 +1,6 @@
 const {
     createCouponService, getAllCouponService, getCouponByIdService, applyCouponService,
-    updateCouponService, deleteCouponService
+    updateCouponService, deleteCouponService, updateCouponStatusService
 } = require('../services/CouponServices')
 
 
@@ -172,7 +172,24 @@ const deleteCouponAPI = async (req, res) => {
     }
 };
 
+const updateCouponStatusAPI = async (req, res) => {
+    try {
+        const result = await updateCouponStatusService(req.params.id);
+        const message =
+            result === "active"
+                ? "Mã giảm giá đã được kích hoạt"
+                : "Mã giảm giá đã bị khóa";
+        return res.status(200).json({
+            statusCode: 200,
+            message,
+            data: result,
+        });
+    } catch (error) {
+        return res.status(500).json({ message: error.message });
+    }
+};
+
 module.exports = {
     postCreateCoupon, getCouponAPI, getCouponById, applyCoupon,
-    updateCouponAPI, deleteCouponAPI
+    updateCouponAPI, deleteCouponAPI, updateCouponStatusAPI
 }
