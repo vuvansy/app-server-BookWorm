@@ -150,7 +150,7 @@ const putUpdateBookService = async (id, id_genre, name, image, slider, price_old
         result.slider = slider ? slider : result.slider;
         result.price_old = price_old ? price_old : result.price_old;
         result.price_new = price_new !== undefined ? Number(price_new) : result.price_new;
-        result.quantity = quantity ? quantity : result.quantity;
+        result.quantity = quantity !== undefined ? quantity : result.quantity;
         result.description = description ? description : result.description;
         result.weight = weight ? weight : result.weight;
         result.size = size ? size : result.size;
@@ -389,7 +389,7 @@ const restoreDeletedBookService = async (id) => {
         const book = await bookModel.findOneWithDeleted({ _id: id });
 
         if (!book || !book.deleted) {
-            return null; 
+            return null;
         }
 
         // Khôi phục sách

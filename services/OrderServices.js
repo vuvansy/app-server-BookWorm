@@ -1,5 +1,6 @@
 const mongoose = require("mongoose");
 const orderModel = require("../models/OrderModels");
+const orderDetailModel = require("../models/OrderDetailModels");
 const couponModel = require("../models/CouponModels");
 const bookModel = require("../models/BookModels");
 const aqp = require('api-query-params');
@@ -47,20 +48,46 @@ const getOrderDetailByIdService = async (id_order) => {
     }
 };
 
+
 const updateOrderStatusService = async (id_order, new_status) => {
     try {
         if (!id_order || new_status === undefined) {
             return { success: false, message: "Thiếu thông tin đơn hàng hoặc trạng thái mới!" };
         }
 
+        const order = await orderModel.findById(id_order);
+        if (!order) {
+            return { success: false, message: "Không tìm thấy đơn hàng!" };
+        }
+
+        // (status === 4)
+        if (new_status === 4) {
+            const orderDetails = await orderDetailModel.find({ id_order });
+            if (orderDetails.length === 0) {
+                return { success: false, message: "Không tìm thấy chi tiết đơn hàng!" };
+            }
+            // console.log(orderDetails);
+
+            // Hoàn lại số lượng sách vào kho
+            const updatePromises = orderDetails.map((item) => {
+                return bookModel.findByIdAndUpdate(
+                    item.id_book, 
+                    { $inc: { quantity: item.quantity } },
+                    { new: true }
+                );
+            });
+
+            await Promise.all(updatePromises);
+        }
+
         const updatedOrder = await orderModel.findByIdAndUpdate(
             id_order,
             { status: new_status },
-            { new: true } // Trả về dữ liệu sau khi cập nhật
+            { new: true }
         );
 
         if (!updatedOrder) {
-            return { success: false, message: "Không tìm thấy đơn hàng!" };
+            return { success: false, message: "Không thể cập nhật đơn hàng!" };
         }
 
         return { success: true, data: updatedOrder };
@@ -68,6 +95,7 @@ const updateOrderStatusService = async (id_order, new_status) => {
         return { success: false, message: "Lỗi hệ thống khi cập nhật trạng thái đơn hàng", error: error.message };
     }
 };
+
 
 const createOrderService = async (orderData) => {
     try {
@@ -132,8 +160,8 @@ const createOrderService = async (orderData) => {
             await coupon.save();
         }
 
-         // Gửi email xác nhận đơn hàng nếu có email
-         if (orderData.email) {
+        // Gửi email xác nhận đơn hàng nếu có email
+        if (orderData.email) {
             await sendOrderConfirmationEmail(orderData.email, populatedOrder);
         }
 
@@ -142,7 +170,6 @@ const createOrderService = async (orderData) => {
         return { success: false, message: "Lỗi tạo đơn hàng", error: error.message };
     }
 };
-
 
 // Hàm gửi email xác nhận đơn hàng
 const sendOrderConfirmationEmail = async (email, order) => {
@@ -163,25 +190,24 @@ const sendOrderConfirmationEmail = async (email, order) => {
             <div style="text-align: center;">
                 <h2 style="color: #007BFF;">✅ Đơn hàng của bạn đã được xác nhận</h2>
                 <p>Xin chào <strong>${order.fullName}</strong>,</p>
-                <p>Cảm ơn bạn đã đặt hàng tại cửa hàng BooksWorm. Dưới đây là thông tin đơn hàng của bạn:</p>
+                <p>Cảm ơn bạn đã đặt hàng tại website BooksWorm. Dưới đây là thông tin đơn hàng của bạn:</p>
                 <hr>
             </div>
             <div>
-                <h3>Thông Tin Khách Hàng</h3>
+                <h3 style="color: #007BFF;">Thông Tin Khách Hàng</h3>
                 <p><strong>Tên:</strong> ${order.fullName}</p>
                 <p><strong>Số điện thoại:</strong> ${order.phone}</p>
                 <p><strong>Email:</strong> ${order.email}</p>
                 <p><strong>Địa chỉ giao hàng:</strong> ${addressString}</p>
             </div>
             <div>
-                <h3>Thông Tin Đơn Hàng</h3>
+                <h3 style="color: #007BFF;">Thông Tin Đơn Hàng</h3>
                 <p><strong>Mã đơn hàng:</strong> ${order._id}</p>
                 <p><strong>Phương thức thanh toán:</strong> ${order.id_payment.name}</p>
                 <p><strong>Phương thức vận chuyển:</strong> ${order.id_delivery.name}</p>
                 <p><strong>Tổng tiền:</strong> ${(order.order_total - order.discountAmount + order.shippingPrice).toLocaleString()} VND</p>
                 <p><strong>Trạng thái đơn hàng:</strong> ${statusMap[order.status] || "Không xác định"}</p>
                 <p><strong>Thanh toán:</strong> ${order.isPaid ? "Đã thanh toán" : "Chưa thanh toán"}</p>
-                <p><strong>Địa chỉ giao hàng:</strong> ${addressString}</p>
                 <hr>
             </div>
             <div style="text-align: center;">

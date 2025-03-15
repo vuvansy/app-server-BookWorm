@@ -179,8 +179,8 @@ const putUpdateBook = async (req, res) => {
     } = req.body;
     // console.log(req.body);
 
-    const requiredFields = ["id_genre", "name", "price_old", "quantity", "quantity", "authors"];
-    let missingFields = requiredFields.filter(field => !req.body[field]);
+    const requiredFields = ["id_genre", "name", "price_old", "quantity", "authors"];
+    let missingFields = requiredFields.filter(field => req.body[field] === undefined);
     if (missingFields.length > 0) {
         return res.status(400).json({
             statusCode: 400,
