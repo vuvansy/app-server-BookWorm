@@ -136,6 +136,59 @@ const applyCouponService = async (code) => {
     }
 };
 
+const updateCouponService = async (id, updateData) => {
+    try {
+        const existingCoupon = await couponModel.findById(id);
+        if (!existingCoupon) {
+            return {
+                success: false,
+                message: "Mã giảm giá không tồn tại!",
+            };
+        }
+
+        // Cập nhật thông tin mã giảm giá
+        const updatedCoupon = await couponModel.findByIdAndUpdate(
+            id,
+            updateData,
+            { new: true } // Trả về dữ liệu sau khi cập nhật
+        );
+
+        return {
+            success: true,
+            message: "Cập nhật mã giảm giá thành công!",
+            data: updatedCoupon,
+        };
+    } catch (error) {
+        console.error(error);
+        return {
+            success: false,
+            message: "Có lỗi xảy ra khi cập nhật mã giảm giá!",
+        };
+    }
+};
+
+const deleteCouponService = async (id) => {
+    try {
+        const coupon = await couponModel.findById(id);
+
+        if (!coupon) {
+            throw new Error("Mã giảm giá không tồn tại!");
+        }
+
+        const result = await couponModel.deleteById(id);
+
+        if (!result) {
+            throw new Error("Không thể xóa mã giảm giá.");
+        }
+
+        return result;
+    } catch (error) {
+        console.error("Lỗi trong deleteCouponService:", error);
+        throw error;
+    }
+};
+
 module.exports = {
-    createCouponService, getAllCouponService, getCouponByIdService, applyCouponService
+    createCouponService, getAllCouponService, getCouponByIdService, applyCouponService,
+    updateCouponService, deleteCouponService
 }

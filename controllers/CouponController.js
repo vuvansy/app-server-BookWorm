@@ -1,5 +1,6 @@
 const {
-    createCouponService, getAllCouponService, getCouponByIdService, applyCouponService
+    createCouponService, getAllCouponService, getCouponByIdService, applyCouponService,
+    updateCouponService, deleteCouponService
 } = require('../services/CouponServices')
 
 
@@ -113,6 +114,65 @@ const applyCoupon = async (req, res) => {
     }
 };
 
+const updateCouponAPI = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { code, value, max_value, min_total, description, quantity, status, start_date, end_date } = req.body;
+
+        if (!code || !value || !quantity || !status || !start_date || !end_date) {
+            return res.status(400).json({
+                statusCode: 400,
+                message: "Vui lòng nhập đầy đủ thông tin!",
+            });
+        }
+
+        const updateData = { code, value, max_value, min_total, description, quantity, status, start_date, end_date };
+
+        const result = await updateCouponService(id, updateData);
+
+        if (!result.success) {
+            return res.status(400).json({ statusCode: 400, message: result.message });
+        }
+
+        return res.status(200).json({
+            statusCode: 200,
+            message: result.message,
+            data: result.data,
+        });
+    } catch (error) {
+        return res.status(500).json({ statusCode: 500, message: "Lỗi server!" });
+    }
+};
+
+const deleteCouponAPI = async (req, res) => {
+    const { id } = req.params;
+
+    try {
+        const result = await deleteCouponService(id);
+
+        if (!result) {
+            return res.status(404).json({
+                statusCode: 404,
+                message: `Không tìm thấy mã giảm giá với id ${id} để xóa.`,
+                data: null,
+            });
+        }
+
+        return res.status(200).json({
+            statusCode: 200,
+            message: "Xóa mã giảm giá thành công!",
+            data: result,
+        });
+    } catch (error) {
+        return res.status(400).json({
+            statusCode: 400,
+            message: error.message,
+            error: "Bad Request",
+        });
+    }
+};
+
 module.exports = {
-    postCreateCoupon, getCouponAPI, getCouponById, applyCoupon
+    postCreateCoupon, getCouponAPI, getCouponById, applyCoupon,
+    updateCouponAPI, deleteCouponAPI
 }
