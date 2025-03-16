@@ -346,12 +346,12 @@ const searchBooksAPI = async (req, res) => {
 };
 
 const getDeletedBooksAPI = async (req, res) => {
-    let { limit, page } = req.query;
+    let { limit, page, name } = req.query;
     limit = limit ? Number(limit) : null;
     page = page ? Number(page) : null;
 
     try {
-        let data = await getDeletedBooksService(limit, page);
+        let data = await getDeletedBooksService(limit, page, name);
         if (!data) {
             return res.status(500).json({
                 statusCode: 500,

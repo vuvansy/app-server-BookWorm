@@ -354,29 +354,29 @@ const searchBooksService = async (searchQuery) => {
     }
 };
 
-const getDeletedBooksService = async (limit, page) => {
+const getDeletedBooksService = async (limit, page, name) => {
     try {
-        let result = null;
-        let query = bookModel.findDeleted(); // Chỉ lấy sách đã xóa mềm
 
+        let query = bookModel.findDeleted(); // Chỉ lấy sách đã xóa mềm
+        if (name) {
+            query = query.where("name", new RegExp(name, "i")); // Tìm kiếm không phân biệt hoa thường
+        }
+        // Xử lý phân trang nếu có
         if (limit && page) {
             let offset = (page - 1) * limit;
-            result = await query
-                .skip(offset)
-                .limit(limit)
-                .sort({ deletedAt: -1 })
-                .populate("id_genre", "name")
-                .populate("authors", "name")
-                .exec();
-        } else {
-            result = await query
-                .sort({ deletedAt: -1 })
-                .populate("id_genre", "name")
-                .populate("authors", "name")
-                .exec();
+            query = query.skip(offset).limit(limit);
         }
 
-        const total = await bookModel.countDocumentsDeleted();
+        let result = await query
+            .sort({ deletedAt: -1 })
+            .populate("id_genre", "name")
+            .populate("authors", "name")
+            .exec();
+
+        const total = await bookModel.countDocumentsDeleted(
+            name ? { name: new RegExp(name, "i") } : {}
+        );
+
         return { result, total };
     } catch (error) {
         console.log("Lỗi khi lấy danh sách sách đã xóa mềm >>>>", error);

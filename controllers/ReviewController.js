@@ -1,5 +1,5 @@
 const {
-    createReviewService, getReviewedOrderDetails
+    createReviewService, getReviewedOrderDetails, getReviewsByBookService
 } = require('../services/ReviewServices')
 
 const createReviewAPI = async (req, res) => {
@@ -42,6 +42,21 @@ const getUserReviews = async (req, res) => {
     }
 };
 
+const getReviewsByBookAPI = async (req, res) => {
+    try {
+        const { bookId } = req.params;
+        const reviews = await getReviewsByBookService(bookId);
+
+        return res.status(200).json({
+            statusCode: 200,
+            message: "Lấy danh sách review thành công",
+            data: reviews
+        });
+    } catch (error) {
+        return res.status(500).json({ message: error.message });
+    }
+};
+
 module.exports = {
-    createReviewAPI, getUserReviews
+    createReviewAPI, getUserReviews, getReviewsByBookAPI
 }

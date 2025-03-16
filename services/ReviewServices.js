@@ -54,6 +54,22 @@ const getReviewedOrderDetails = async (id_user) => {
     }
 };
 
+
+const getReviewsByBookService = async (bookId) => {
+    // Lấy danh sách review thông qua order_detail -> book
+    const reviews = await reviewModel.find()
+        .populate({
+            path: "id_order_detail",
+            match: { id_book: bookId }, // Chỉ lấy order_detail có id_book tương ứng
+            select: "id_book"
+        })
+        .populate("id_user", "name email") // Lấy thông tin người dùng
+        .sort({ createdAt: -1 });
+
+    // Lọc những review có order_detail hợp lệ
+    return reviews.filter(review => review.id_order_detail !== null);
+};
+
 module.exports = {
-    createReviewService, getReviewedOrderDetails
+    createReviewService, getReviewedOrderDetails, getReviewsByBookService
 }
