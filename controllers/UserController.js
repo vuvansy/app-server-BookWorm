@@ -212,12 +212,15 @@ const logoutUserAPI = async (req, res) => {
 const forgotPasswordAPI = async (req, res) => {
     const { email } = req.body;
     if (!email) {
-        return res.status(400).json({ success: false, message: "Vui lòng nhập email." });
+        return res.status(400).json({ message: "Vui lòng nhập email." });
     }
 
     const result = await forgotPasswordService(email);
     if (!result) {
-        return res.status(404).json({ success: false, message: "Email không tồn tại trong hệ thống." });
+        return res.status(200).json({
+            statusCode: 404,
+            message: "Email không tồn tại trong hệ thống."
+        });
     }
 
     const { token, fullName } = result;

@@ -1,5 +1,5 @@
 const {
-    createReviewService, getReviewedOrderDetails, getReviewsByBookService
+    createReviewService, getReviewedOrderDetails, getReviewsByBookService, getReviewedBooksService
 } = require('../services/ReviewServices')
 
 const createReviewAPI = async (req, res) => {
@@ -57,6 +57,32 @@ const getReviewsByBookAPI = async (req, res) => {
     }
 };
 
+const getReviewedBooksAPI = async (req, res) => {
+    try {
+        const data = await getReviewedBooksService();
+
+        if (!data.success) {
+            return res.status(500).json({
+                statusCode: 500,
+                message: data.message,
+                data: null
+            });
+        }
+
+        return res.status(200).json({
+            statusCode: 200,
+            message: "Lấy danh sách sách đã đánh giá thành công",
+            data: data.data
+        });
+    } catch (error) {
+        return res.status(500).json({
+            statusCode: 500,
+            message: "Lỗi máy chủ khi lấy danh sách sách đã đánh giá",
+            error: error.message
+        });
+    }
+};
+
 module.exports = {
-    createReviewAPI, getUserReviews, getReviewsByBookAPI
+    createReviewAPI, getUserReviews, getReviewsByBookAPI, getReviewedBooksAPI
 }

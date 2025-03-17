@@ -7,9 +7,9 @@ const {
 
 const getCouponAPI = async (req, res) => {
 
-    let limit = req.query.limit;
-    let page = req.query.page;
-    let name = req.query.name;
+    let { limit, page, name } = req.query;
+    limit = limit ? Number(limit) : null;
+    page = page ? Number(page) : null;
     let result, total;
 
     if (limit && page) {

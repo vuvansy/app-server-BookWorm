@@ -54,7 +54,7 @@ router.post('/create_payment_url', function (req, res, next) {
     let vnpUrl = config.get('vnp_Url');
     let returnUrl = config.get('vnp_ReturnUrl');
     let orderId = req.body.orderId; //truyền vào mã đơn hàng
-    let amount = req.body.amount; //Tổng tiền thanh toán
+    let amount = req.body.amount; //Tổng tiền thanh toán total_order+ ship - giảm giá
     let bankCode = req.body.bankCode;
     
     let locale = req.body.language;

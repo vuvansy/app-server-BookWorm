@@ -5,32 +5,38 @@ const aqp = require('api-query-params');
 const getAllCouponService = async (limit, page, name, queryString) => {
     try {
         let result = null;
+        const { filter, sort } = aqp(queryString);
+        delete filter.page;
+
+        Object.keys(filter).forEach(key => {
+            if (typeof filter[key] === "string") {
+                filter[key] = { $regex: filter[key], $options: "i" };
+            }
+        });
+
+        const sortOption = sort && Object.keys(sort).length ? sort : { createdAt: -1 };
+
         if (limit && page) {
             let offset = (page - 1) * limit;
-
-            const { filter } = aqp(queryString);
-            delete filter.page;
-
-            Object.keys(filter).forEach(key => {
-                if (typeof filter[key] === "string") {
-                    filter[key] = { $regex: filter[key], $options: "i" };
-                }
-            });
-
-            result = await couponModel.find(filter).skip(offset).limit(limit).exec();
+            result = await couponModel
+                .find(filter)
+                .sort(sortOption)
+                .skip(offset)
+                .limit(limit)
+                .exec();
         } else {
-            result = await couponModel.find({});
+            result = await couponModel.find(filter).sort(sortOption).exec();
         }
 
-        const total = await couponModel.countDocuments({});
+        const total = await couponModel.countDocuments(filter);
         return { result, total };
 
     } catch (error) {
         console.log("error >>>> ", error);
         return null;
     }
+};
 
-}
 
 const createCouponService = async (couponData) => {
     try {
