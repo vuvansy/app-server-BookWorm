@@ -54,23 +54,54 @@ const getReviewedOrderDetails = async (id_user) => {
     }
 };
 
-const getReviewsByBookService = async (bookId) => {
-    // Lấy danh sách review thông qua order_detail -> book
-    const reviews = await reviewModel.find()
-        .populate({
-            path: "id_order_detail",
-            match: { id_book: bookId },
-            select: "id_book"
-        })
-        .populate("id_user", "fullName")
-        .sort({ createdAt: -1 });
 
-    // Lọc những review có order_detail hợp lệ
-    return reviews.filter(review => review.id_order_detail !== null);
+const getReviewsByBookService = async (bookId, page, limit) => {
+    try {
+        // Tìm tất cả review có order_detail hợp lệ
+        const allReviews = await reviewModel.find()
+            .populate({
+                path: "id_order_detail",
+                select: "id_book",
+                populate: { path: "id_book", select: "_id" }
+            })
+            .populate("id_user", "fullName")
+            .sort({ createdAt: -1 });
+
+        // Lọc những review có order_detail hợp lệ và đúng bookId
+        const filteredReviews = allReviews.filter(review =>
+            review.id_order_detail && review.id_order_detail.id_book?._id.toString() === bookId
+        );
+
+        const total = filteredReviews.length;
+
+        let paginatedReviews = filteredReviews;
+        if (page && limit) {
+            const offset = (page - 1) * limit;
+            paginatedReviews = filteredReviews.slice(offset, offset + limit);
+        }
+
+        return {
+            success: true,
+            result: paginatedReviews,
+            meta: page && limit ? {
+                page,
+                limit,
+                pages: Math.ceil(total / limit),
+                total
+            } : null
+        };
+    } catch (error) {
+        console.error("Lỗi khi lấy danh sách review", error);
+        return { success: false, message: "Lỗi khi lấy dữ liệu" };
+    }
 };
 
-const getReviewedBooksService = async () => {
+
+
+const getReviewedBooksService = async (page = 1, limit = 10) => {
     try {
+        const skip = (page - 1) * limit;
+
         const reviewedBooks = await reviewModel.aggregate([
             {
                 $lookup: {
@@ -95,27 +126,63 @@ const getReviewedBooksService = async () => {
             {
                 $group: {
                     _id: "$bookDetails._id",
-                    title: { $first: "$bookDetails.name" },
+                    name: { $first: "$bookDetails.name" },
                     image: { $first: "$bookDetails.image" },
-                    avgRating: { $avg: "$rating" },
-                    // reviews: {
-                    //     $push: {
-                    //         comment: "$comment",
-                    //         rating: "$rating",
-                    //         user: "$id_user"
-                    //     }
-                    // }
+                    avgRating: { $avg: "$rating" }
                 }
             },
-            { $sort: { avgRating: -1 } }
+            { $sort: { avgRating: -1 } },
+            { $skip: skip },
+            { $limit: limit }
         ]);
 
-        return { success: true, data: reviewedBooks };
+        const totalBooks = await reviewModel.aggregate([
+            {
+                $lookup: {
+                    from: "order_details",
+                    localField: "id_order_detail",
+                    foreignField: "_id",
+                    as: "orderDetail"
+                }
+            },
+            { $unwind: "$orderDetail" },
+
+            {
+                $lookup: {
+                    from: "books",
+                    localField: "orderDetail.id_book",
+                    foreignField: "_id",
+                    as: "bookDetails"
+                }
+            },
+            { $unwind: "$bookDetails" },
+
+            {
+                $group: {
+                    _id: "$bookDetails._id"
+                }
+            },
+            { $count: "total" }
+        ]);
+
+        const total = totalBooks.length > 0 ? totalBooks[0].total : 0;
+
+        return {
+            success: true,
+            result: reviewedBooks,
+            meta: {
+                page,
+                limit,
+                pages: Math.ceil(total / limit),
+                total
+            }
+        };
     } catch (error) {
         console.error("Lỗi khi lấy danh sách sách đã đánh giá", error);
         return { success: false, message: "Lỗi khi lấy dữ liệu" };
     }
 };
+
 
 
 module.exports = {
