@@ -1,6 +1,6 @@
 const {
     createOrderService, getOrdersByUserService, getOrderDetailByIdService,
-    updateOrderStatusService
+    updateOrderStatusService, updateOrderPaymentStatusService
 } = require('../services/OrderServices')
 
 
@@ -97,10 +97,25 @@ const postCreateOrder = async (req, res) => {
     }
 };
 
+const updateOrderPaymentStatus = async (req, res) => {
+    try {
+        const { orderId, isPaid } = req.body;
+
+        const result = await updateOrderPaymentStatusService(orderId, isPaid);
+
+        if (!result.success) {
+            return res.status(400).json({ message: result.message, error: result.error });
+        }
+
+        return res.status(200).json({ message: result.message, order: result.order });
+    } catch (error) {
+        return res.status(500).json({ message: "Lỗi hệ thống khi cập nhật thanh toán", error: error.message });
+    }
+};
 
 
 
 module.exports = {
     postCreateOrder, getOrdersByUser, getOrderDetailById,
-    updateOrderStatus
+    updateOrderStatus, updateOrderPaymentStatus
 }

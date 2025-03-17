@@ -6,6 +6,7 @@ const bookModel = require("../models/BookModels");
 const aqp = require('api-query-params');
 const mailer = require("nodemailer");
 const getConstants = require("../helpers/constants").getConstants;
+const paymentModel = require("../models/PaymentModels");
 require("dotenv").config();
 
 const getOrdersByUserService = async (id_user) => {
@@ -71,7 +72,7 @@ const updateOrderStatusService = async (id_order, new_status) => {
             // Hoàn lại số lượng sách vào kho
             const updatePromises = orderDetails.map((item) => {
                 return bookModel.findByIdAndUpdate(
-                    item.id_book, 
+                    item.id_book,
                     { $inc: { quantity: item.quantity } },
                     { new: true }
                 );
@@ -160,8 +161,10 @@ const createOrderService = async (orderData) => {
             await coupon.save();
         }
 
-        // Gửi email xác nhận đơn hàng nếu có email
-        if (orderData.email) {
+        // Gửi email xác nhận đơn hàng nếu có email & không phải thanh toán VNPay
+        const paymentMethod = await paymentModel.findById(id_payment);
+        console.log(paymentMethod?.name.toLowerCase());
+        if (orderData.email && paymentMethod?.name.toLowerCase() !== "thanh toán qua vnpay") {
             await sendOrderConfirmationEmail(orderData.email, populatedOrder);
         }
 
@@ -170,6 +173,61 @@ const createOrderService = async (orderData) => {
         return { success: false, message: "Lỗi tạo đơn hàng", error: error.message };
     }
 };
+
+const updateOrderPaymentStatusService = async (orderId, isPaid) => {
+    try {
+        if (!orderId) {
+            return { success: false, message: "Thiếu thông tin orderId!" };
+        }
+
+        const order = await orderModel
+            .findById(orderId)
+            .populate("id_user")
+            .populate("id_payment")
+            .populate("id_delivery");
+
+        if (!order) {
+            return { success: false, message: "Không tìm thấy đơn hàng!" };
+        }
+
+        if (isPaid) {
+            order.isPaid = true;
+            order.paidAt = new Date();
+            await order.save();
+
+            if (order.id_user?.email) {
+                await sendOrderConfirmationEmail(order.id_user.email, order);
+            }
+
+            return { success: true, message: "Thanh toán thành công, đã cập nhật đơn hàng!", order };
+        } else {
+            const orderDetails = await orderDetailModel.find({ id_order: orderId });
+            // console.log(orderDetails);
+            if (orderDetails.length === 0) {
+                return { success: false, message: "Không tìm thấy chi tiết đơn hàng!" };
+            }
+
+            // console.log(orderDetails);
+            const updatePromises = orderDetails.map((item) => {
+                return bookModel.findByIdAndUpdate(
+                    item.id_book,
+                    { $inc: { quantity: item.quantity } },
+                    { new: true }
+                );
+            });
+
+            await Promise.all(updatePromises);
+
+            order.status = 4; // Status 4: Thanh toán thất bại
+            await order.save();
+            return { success: true, message: "Thanh toán thất bại, đã cập nhật trạng thái đơn hàng!", order };
+        }
+    } catch (error) {
+        return { success: false, message: "Lỗi hệ thống khi cập nhật thanh toán", error: error.message };
+    }
+};
+
+
 
 // Hàm gửi email xác nhận đơn hàng
 const sendOrderConfirmationEmail = async (email, order) => {
@@ -243,5 +301,5 @@ const transporter = mailer.createTransport({
 
 module.exports = {
     createOrderService, getOrdersByUserService,
-    getOrderDetailByIdService, updateOrderStatusService
+    getOrderDetailByIdService, updateOrderStatusService, updateOrderPaymentStatusService
 }
