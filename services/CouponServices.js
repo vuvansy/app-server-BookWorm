@@ -5,32 +5,38 @@ const aqp = require('api-query-params');
 const getAllCouponService = async (limit, page, name, queryString) => {
     try {
         let result = null;
+        const { filter, sort } = aqp(queryString);
+        delete filter.page;
+
+        Object.keys(filter).forEach(key => {
+            if (typeof filter[key] === "string") {
+                filter[key] = { $regex: filter[key], $options: "i" };
+            }
+        });
+
+        const sortOption = sort && Object.keys(sort).length ? sort : { createdAt: -1 };
+
         if (limit && page) {
             let offset = (page - 1) * limit;
-
-            const { filter } = aqp(queryString);
-            delete filter.page;
-
-            Object.keys(filter).forEach(key => {
-                if (typeof filter[key] === "string") {
-                    filter[key] = { $regex: filter[key], $options: "i" };
-                }
-            });
-
-            result = await couponModel.find(filter).skip(offset).limit(limit).exec();
+            result = await couponModel
+                .find(filter)
+                .sort(sortOption)
+                .skip(offset)
+                .limit(limit)
+                .exec();
         } else {
-            result = await couponModel.find({});
+            result = await couponModel.find(filter).sort(sortOption).exec();
         }
 
-        const total = await couponModel.countDocuments({});
+        const total = await couponModel.countDocuments(filter);
         return { result, total };
 
     } catch (error) {
         console.log("error >>>> ", error);
         return null;
     }
+};
 
-}
 
 const createCouponService = async (couponData) => {
     try {
@@ -136,6 +142,71 @@ const applyCouponService = async (code) => {
     }
 };
 
+const updateCouponService = async (id, updateData) => {
+    try {
+        const existingCoupon = await couponModel.findById(id);
+        if (!existingCoupon) {
+            return {
+                success: false,
+                message: "Mã giảm giá không tồn tại!",
+            };
+        }
+
+        // Cập nhật thông tin mã giảm giá
+        const updatedCoupon = await couponModel.findByIdAndUpdate(
+            id,
+            updateData,
+            { new: true } // Trả về dữ liệu sau khi cập nhật
+        );
+
+        return {
+            success: true,
+            message: "Cập nhật mã giảm giá thành công!",
+            data: updatedCoupon,
+        };
+    } catch (error) {
+        console.error(error);
+        return {
+            success: false,
+            message: "Có lỗi xảy ra khi cập nhật mã giảm giá!",
+        };
+    }
+};
+
+const deleteCouponService = async (id) => {
+    try {
+        const coupon = await couponModel.findById(id);
+
+        if (!coupon) {
+            throw new Error("Mã giảm giá không tồn tại!");
+        }
+
+        const result = await couponModel.deleteById(id);
+
+        if (!result) {
+            throw new Error("Không thể xóa mã giảm giá.");
+        }
+
+        return result;
+    } catch (error) {
+        console.error("Lỗi trong deleteCouponService:", error);
+        throw error;
+    }
+};
+
+const updateCouponStatusService = async (id) => {
+    const result = await couponModel.findById(id);
+    if (!result) {
+        throw new Error("Mã giảm giá không tồn tại");
+    }
+
+    result.status = result.status === "active" ? "inactive" : "active";
+    await result.save();
+
+    return result.status;
+};
+
 module.exports = {
-    createCouponService, getAllCouponService, getCouponByIdService, applyCouponService
+    createCouponService, getAllCouponService, getCouponByIdService, applyCouponService,
+    updateCouponService, deleteCouponService, updateCouponStatusService
 }

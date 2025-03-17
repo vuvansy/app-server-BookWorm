@@ -1,4 +1,5 @@
 const genreModel = require("../models/GenreModels");
+const bookModel = require("../models/BookModels");
 const aqp = require('api-query-params');
 
 const getAllGenreService = async (limit, page, name, queryString) => {
@@ -111,16 +112,25 @@ const putUpdateGenreService = async (id, name, image) => {
 
 const deleteAGenreService = async (id) => {
     try {
-        let result = await genreModel.deleteById(id);
-        if (!result || result.deletedCount === 0) {
-            throw new Error("Genre không tồn tại hoặc không thể xóa.");
+        const bookCount = await bookModel.countDocuments({ id_genre: id });
+
+        if (bookCount > 0) {
+            throw new Error("Không thể xóa thể loại sách này.");
         }
+
+        const result = await genreModel.deleteById(id);
+
+        if (!result) {
+            throw new Error("Thể loại không tồn tại hoặc không thể xóa.");
+        }
+
         return result;
     } catch (error) {
-        console.log("error >>>> ", error);
-        return null;
+        console.error("Lỗi trong deleteAGenreService:", error);
+        throw error;
     }
-}
+};
+
 
 module.exports = {
     getAllGenreService, createGenreService, putUpdateGenreService, deleteAGenreService, createArrayGenreService

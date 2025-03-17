@@ -2,44 +2,70 @@ const authorModel = require("../models/AuthorModels");
 
 const getAllAuthorService = async (limit, page, name) => {
     try {
-        let result = null;
-        if (limit && page) {
-            let offset = (page - 1) * limit; //Số lượng bản ghi bỏ qua
-            if (name) {
-                result = await authorModel.find(
-                    {
-                        "name": { $regex: '.*' + name + '.*' }
-                    }
-                ).skip(offset).limit(limit).exec();
-                // console.log(result);
-            } else
-                result = await authorModel.find({}).skip(offset).limit(limit).exec();
-        } else {
-            result = await authorModel.find({});
+        let filter = {};
+        let offset = 0;
+        if (page && limit) {
+            offset = (page - 1) * limit;
         }
+        const result = await authorModel.find(filter)
+            .skip(offset)
+            .limit(limit)
+            .sort({ createdAt: -1 })
+            .exec();
+        const total = await authorModel.countDocuments();
 
-        return result;
+        return { result, total };
 
     } catch (error) {
         console.log("error >>>> ", error);
         return null;
     }
-   
+
 }
 
-const createAuthorService = async (genreData) => {
+const createAuthorService = async (authorData) => {
     try {
         let result = await authorModel.create({
-        name: genreData.name,
-       })
-       return result;
+            name: authorData.name,
+        })
+        return result;
     } catch (error) {
-       console.log(error);
-       return null;
+        console.log(error);
+        return null;
     }
 }
 
+const updateAuthorService = async (id, name) => {
+    try {
+        let result = await authorModel.findById(id);
+        if (!result) {
+            return null;
+        }
+
+        result.name = name;
+        await result.save();
+
+        return result;
+    } catch (error) {
+        console.error("Lỗi trong updateAuthorService:", error);
+        throw error;
+    }
+};
+
+const deleteAuthorService = async (id) => {
+    try {
+        let author = await authorModel.deleteById(id);
+        if (!author) {
+            return null;
+        }
+        return author;
+    } catch (error) {
+        console.error("Lỗi trong deleteAuthorService:", error);
+        throw error;
+    }
+};
 
 module.exports = {
-    getAllAuthorService, createAuthorService,
+    getAllAuthorService, createAuthorService, updateAuthorService,
+    deleteAuthorService
 }

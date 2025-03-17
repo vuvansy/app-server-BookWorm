@@ -5,10 +5,10 @@ const ObjectId = Schema.ObjectId;
 
 const book = new Schema({
     id: { type: ObjectId },
-    id_genre: { type: ObjectId, ref: "genre", required: true},
+    id_genre: { type: ObjectId, ref: "genre", required: true },
     name: { type: String, required: true },
     image: { type: String },
-    slider:{type: Array},
+    slider: { type: Array },
     price_old: { type: Number, required: true },
     price_new: { type: Number },
     quantity: { type: Number, required: true, min: 0 },
@@ -22,6 +22,6 @@ const book = new Schema({
     book_cover: { type: String },
 }, { timestamps: true });
 
-book.plugin(mongoose_delete, { deletedAt : true, overrideMethods: 'all' });
+book.plugin(mongoose_delete, { deletedAt: true, overrideMethods: 'all' });
 
 module.exports = mongoose.models.book || mongoose.model("book", book);
