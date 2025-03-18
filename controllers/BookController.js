@@ -9,7 +9,8 @@ const {
     getNewBooksService,
     searchBooksService,
     getDeletedBooksService,
-    restoreDeletedBookService
+    restoreDeletedBookService,
+    getTrendingProductsService
 
 } = require('../services/BookServices')
 
@@ -418,6 +419,28 @@ const restoreDeletedBookAPI = async (req, res) => {
     }
 };
 
+const getTrendingBooks = async (req, res) => {
+    try {
+        const { page, limit, all, id_genre, sort } = req.query;
+
+        const { result, meta } = await getTrendingProductsService({ page, limit, all, id_genre, sort });
+
+        return res.status(200).json({
+            statusCode: 200,
+            message: "Lấy danh sách sản phẩm xu hướng thành công!",
+            meta,
+            data: result
+        });
+    } catch (error) {
+        console.error("Lỗi khi lấy danh sách sản phẩm xu hướng:", error);
+        return res.status(500).json({
+            statusCode: 500,
+            message: "Lỗi máy chủ, không thể lấy danh sách sản phẩm xu hướng.",
+            error: error.message
+        });
+    }
+};
+
 
 module.exports = {
     getBookAPI,
@@ -430,6 +453,7 @@ module.exports = {
     getNewBooksAPI,
     searchBooksAPI,
     getDeletedBooksAPI,
-    restoreDeletedBookAPI
+    restoreDeletedBookAPI,
+    getTrendingBooks
 
 }

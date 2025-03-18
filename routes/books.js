@@ -12,13 +12,15 @@ const {
     getNewBooksAPI,
     searchBooksAPI,
     getDeletedBooksAPI,
-    restoreDeletedBookAPI
+    restoreDeletedBookAPI,
+    getTrendingBooks
 } = require('../controllers/BookController')
 
 
 router.get('/book', getBookAPI);
 router.post('/book', postCreateBook);
 router.get('/book/flash-sale', getFlashSaleBooks);
+router.get('/book/trending', getTrendingBooks);
 router.get('/book/new', getNewBooksAPI);
 router.get('/book/search', searchBooksAPI);
 router.get('/book/:id/genre/:id_genre', getBooksByGenreAPI);
