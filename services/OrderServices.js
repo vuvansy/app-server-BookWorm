@@ -9,6 +9,61 @@ const getConstants = require("../helpers/constants").getConstants;
 const paymentModel = require("../models/PaymentModels");
 require("dotenv").config();
 
+const getOrdersService = async (limit, page, status, queryString) => {
+    try {
+        let filter = {};
+        const parsedQuery = aqp(queryString);
+        const queryFilter = parsedQuery.filter || {};
+        const querySort = parsedQuery.sort || {};
+
+        delete queryFilter.page;
+
+        // 🔹 Lọc theo trạng thái đơn hàng (status)
+        if (status) {
+            filter.status = status;
+        }
+
+        // 🔹 Sắp xếp dữ liệu
+        let sort = {};
+        if (queryString.sort) {
+            let sortField = queryString.sort;
+            if (sortField.startsWith('-')) {
+                sortField = sortField.substring(1);
+                sort[sortField] = -1;
+            } else {
+                sort[sortField] = 1;
+            }
+        } else {
+            sort = { createdAt: -1 };
+        }
+
+        // 🔹 Lấy danh sách đơn hàng theo phân trang hoặc toàn bộ
+        let result;
+        if (page && limit) {
+            let offset = (page - 1) * limit;
+            result = await orderModel.find(filter)
+                .skip(offset)
+                .limit(limit)
+                .sort(sort)
+                .populate("id_payment")
+                .populate("id_delivery")
+                .exec();
+        } else {
+            result = await orderModel.find(filter)
+                .sort(sort)
+                .populate("id_payment")
+                .populate("id_delivery")
+                .exec();
+        }
+
+        const total = await orderModel.countDocuments(filter);
+        return { result, total };
+    } catch (error) {
+        console.log("error >>>> ", error);
+        return null;
+    }
+};
+
 const getOrdersByUserService = async (id_user) => {
     try {
         if (!id_user) {
@@ -301,5 +356,6 @@ const transporter = mailer.createTransport({
 
 module.exports = {
     createOrderService, getOrdersByUserService,
-    getOrderDetailByIdService, updateOrderStatusService, updateOrderPaymentStatusService
+    getOrderDetailByIdService, updateOrderStatusService, 
+    updateOrderPaymentStatusService, getOrdersService
 }

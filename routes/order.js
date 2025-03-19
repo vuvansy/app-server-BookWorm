@@ -3,11 +3,11 @@ var router = express.Router();
 
 const {
     postCreateOrder, getOrdersByUser, getOrderDetailById,
-    updateOrderStatus, updateOrderPaymentStatus
+    updateOrderStatus, updateOrderPaymentStatus, getOrdersAPI
 } = require('../controllers/OrderController')
 
 
-// router.get('/order', getOrderAPI);
+router.get('/order', getOrdersAPI);
 router.post('/order', postCreateOrder);
 router.post("/order/update-payment-status", updateOrderPaymentStatus);
 router.get("/order/:id_user", getOrdersByUser);

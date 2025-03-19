@@ -1,8 +1,46 @@
 const {
     createOrderService, getOrdersByUserService, getOrderDetailByIdService,
-    updateOrderStatusService, updateOrderPaymentStatusService
+    updateOrderStatusService, updateOrderPaymentStatusService,
+    getOrdersService
 } = require('../services/OrderServices')
 
+const getOrdersAPI = async (req, res) => {
+    let { limit, page, status } = req.query;
+    limit = limit ? Number(limit) : null;
+    page = page ? Number(page) : null;
+
+    const data = await getOrdersService(limit, page, status, req.query);
+
+    if (!data) {
+        return res.status(500).json({
+            statusCode: 500,
+            message: "Lỗi khi lấy danh sách đơn hàng",
+            data: null
+        });
+    }
+
+    if (limit && page) {
+        return res.status(200).json({
+            statusCode: 200,
+            message: "Danh sách đơn hàng có phân trang",
+            data: {
+                meta: {
+                    page,
+                    limit,
+                    pages: Math.ceil(data.total / limit),
+                    total: data.total
+                },
+                result: data.result
+            }
+        });
+    } else {
+        return res.status(200).json({
+            statusCode: 200,
+            message: "Danh sách đơn hàng",
+            data: data.result
+        });
+    }
+};
 
 const getOrdersByUser = async (req, res) => {
     try {
@@ -117,5 +155,5 @@ const updateOrderPaymentStatus = async (req, res) => {
 
 module.exports = {
     postCreateOrder, getOrdersByUser, getOrderDetailById,
-    updateOrderStatus, updateOrderPaymentStatus
+    updateOrderStatus, updateOrderPaymentStatus, getOrdersAPI
 }

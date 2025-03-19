@@ -20,8 +20,12 @@ const getBookLikesByUserService = async (id_user) => {
             throw new Error("Thiếu ID người dùng!");
         }
 
-        const bookLikes = await bookLikeModel.find({ id_user }).populate("id_book");
-        return bookLikes;
+        const bookLikes = await bookLikeModel
+        .find({ id_user })
+        .populate("id_book")
+        .select("id_book -_id"); 
+
+    return bookLikes.map(item => item.id_book); 
     } catch (error) {
         throw new Error(error.message);
     }
