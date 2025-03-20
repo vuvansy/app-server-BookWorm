@@ -4,9 +4,9 @@ const aqp = require('api-query-params');
 const createBookLikeService = async (bookLike) => {
     try {
         // Kiểm tra xem đã tồn tại like hay chưa
-        let existingLike = await bookLikeModel.findOne({ 
-            id_user: bookLike.id_user, 
-            id_book: bookLike.id_book 
+        let existingLike = await bookLikeModel.findOne({
+            id_user: bookLike.id_user,
+            id_book: bookLike.id_book
         });
 
         if (existingLike) {
@@ -28,13 +28,8 @@ const getBookLikesByUserService = async (id_user) => {
         if (!id_user) {
             throw new Error("Thiếu ID người dùng!");
         }
-
-        const bookLikes = await bookLikeModel
-            .find({ id_user })
-            .populate("id_book")
-            .select("id_book -_id");
-
-        return bookLikes.map(item => item.id_book);
+        const bookLikes = await bookLikeModel.find({ id_user }).populate("id_book");
+        return bookLikes;
     } catch (error) {
         throw new Error(error.message);
     }
