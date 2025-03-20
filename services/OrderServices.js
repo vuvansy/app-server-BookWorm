@@ -18,12 +18,11 @@ const getOrdersService = async (limit, page, status, queryString) => {
 
         delete queryFilter.page;
 
-        // 🔹 Lọc theo trạng thái đơn hàng (status)
         if (status) {
             filter.status = status;
         }
 
-        // 🔹 Sắp xếp dữ liệu
+       
         let sort = {};
         if (queryString.sort) {
             let sortField = queryString.sort;
@@ -34,10 +33,9 @@ const getOrdersService = async (limit, page, status, queryString) => {
                 sort[sortField] = 1;
             }
         } else {
-            sort = { createdAt: -1 };
+            sort = { createdAt: 1 };
         }
 
-        // 🔹 Lấy danh sách đơn hàng theo phân trang hoặc toàn bộ
         let result;
         if (page && limit) {
             let offset = (page - 1) * limit;
@@ -56,8 +54,25 @@ const getOrdersService = async (limit, page, status, queryString) => {
                 .exec();
         }
 
+        const defaultStatusCounts = {
+            "0": 0,  
+            "1": 0, 
+            "2": 0,  
+            "3": 0,  
+            "4": 0   
+        };
+
+        const statusCounts = await orderModel.aggregate([
+            { $group: { _id: "$status", count: { $sum: 1 } } }
+        ]);
+
+        statusCounts.forEach(item => {
+            defaultStatusCounts[item._id] = item.count;
+        });
+
         const total = await orderModel.countDocuments(filter);
-        return { result, total };
+
+        return { result, total, statusCounts: defaultStatusCounts };
     } catch (error) {
         console.log("error >>>> ", error);
         return null;
@@ -356,6 +371,6 @@ const transporter = mailer.createTransport({
 
 module.exports = {
     createOrderService, getOrdersByUserService,
-    getOrderDetailByIdService, updateOrderStatusService, 
+    getOrderDetailByIdService, updateOrderStatusService,
     updateOrderPaymentStatusService, getOrdersService
 }

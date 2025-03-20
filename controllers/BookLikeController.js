@@ -5,22 +5,25 @@ const {
 const postCreateBookLike = async (req, res) => {
     let { id_user, id_book } = req.body;
     if (!id_user || !id_book) {
-        return res.status(400).json({ message: 'Vui lòng nhập đầy đủ thông tin!' });
+        return res.status(400).json({ statusCode: 400, message: 'Vui lòng nhập đầy đủ thông tin!' });
     }
-    let bookLike = {
-        id_user,
-        id_book
+
+    let result = await createBookLikeService({ id_user, id_book });
+
+    if (result.status === 'exists') {
+        return res.status(409).json({ statusCode: 409, message: result.message });
     }
-    // console.log(bookLike);
-    let result = await createBookLikeService(bookLike);
-    return res.status(200).json(
-        {
-            "statusCode": 201,
-            "message": "",
-            data: result
-        }
-    )
-}
+
+    if (result.status === 'error') {
+        return res.status(500).json({ statusCode: 500, message: result.message });
+    }
+
+    return res.status(201).json({
+        statusCode: 201,
+        message: 'Thích sách thành công!',
+        data: result.data
+    });
+};
 
 const getBookLikesByUser = async (req, res) => {
     try {

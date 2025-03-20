@@ -97,7 +97,6 @@ const getReviewsByBookService = async (bookId, page, limit) => {
 };
 
 
-
 const getReviewedBooksService = async (page = 1, limit = 10) => {
     try {
         const skip = (page - 1) * limit;
@@ -182,7 +181,6 @@ const getReviewedBooksService = async (page = 1, limit = 10) => {
         return { success: false, message: "Lỗi khi lấy dữ liệu" };
     }
 };
-
 
 
 module.exports = {

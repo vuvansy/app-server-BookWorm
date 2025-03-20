@@ -305,7 +305,7 @@ const getNewBooksAPI = async (req, res) => {
 
         return res.status(200).json({
             statusCode: 200,
-            message: "Danh sách sách có phân trang",
+            message: "Lấy danh sách sản phẩm mới thành công!",
             data: {
                 meta,
                 result
@@ -424,12 +424,21 @@ const getTrendingBooks = async (req, res) => {
         const { page, limit, all, id_genre, sort } = req.query;
 
         const { result, meta } = await getTrendingProductsService({ page, limit, all, id_genre, sort });
+        if (!all) {
+            return res.status(200).json({
+                statusCode: 200,
+                message: "Danh sách sách",
+                data: result
+            });
+        }
 
         return res.status(200).json({
             statusCode: 200,
             message: "Lấy danh sách sản phẩm xu hướng thành công!",
-            meta,
-            data: result
+            data: {
+                meta,
+                result
+            }
         });
     } catch (error) {
         console.error("Lỗi khi lấy danh sách sản phẩm xu hướng:", error);

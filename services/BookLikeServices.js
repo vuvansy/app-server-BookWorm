@@ -3,16 +3,25 @@ const aqp = require('api-query-params');
 
 const createBookLikeService = async (bookLike) => {
     try {
-        let result = await bookLikeModel.create({
-            id_user: bookLike.id_user,
-            id_book: bookLike.id_book
-        })
-        return result;
+        // Kiểm tra xem đã tồn tại like hay chưa
+        let existingLike = await bookLikeModel.findOne({ 
+            id_user: bookLike.id_user, 
+            id_book: bookLike.id_book 
+        });
+
+        if (existingLike) {
+            return { status: 'exists', message: 'Người dùng đã thích cuốn sách này!' };
+        }
+
+        // Nếu chưa có, tạo mới
+        let result = await bookLikeModel.create(bookLike);
+        return { status: 'success', data: result };
+
     } catch (error) {
-        console.log(error);
-        return null;
+        console.error(error);
+        return { status: 'error', message: 'Lỗi server, không thể thêm book like!' };
     }
-}
+};
 
 const getBookLikesByUserService = async (id_user) => {
     try {
@@ -21,11 +30,11 @@ const getBookLikesByUserService = async (id_user) => {
         }
 
         const bookLikes = await bookLikeModel
-        .find({ id_user })
-        .populate("id_book")
-        .select("id_book -_id"); 
+            .find({ id_user })
+            .populate("id_book")
+            .select("id_book -_id");
 
-    return bookLikes.map(item => item.id_book); 
+        return bookLikes.map(item => item.id_book);
     } catch (error) {
         throw new Error(error.message);
     }

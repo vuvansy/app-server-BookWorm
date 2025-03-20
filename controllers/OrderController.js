@@ -28,7 +28,8 @@ const getOrdersAPI = async (req, res) => {
                     page,
                     limit,
                     pages: Math.ceil(data.total / limit),
-                    total: data.total
+                    total: data.total,
+                    statusCounts: data.statusCounts
                 },
                 result: data.result
             }
@@ -37,7 +38,7 @@ const getOrdersAPI = async (req, res) => {
         return res.status(200).json({
             statusCode: 200,
             message: "Danh sách đơn hàng",
-            data: data.result
+            data: data.result,
         });
     }
 };
