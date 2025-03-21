@@ -57,17 +57,14 @@ const getReviewedOrderDetails = async (id_user) => {
 
 const getReviewsByBookService = async (bookId, page, limit) => {
     try {
-        // Tìm tất cả review có order_detail hợp lệ
         const allReviews = await reviewModel.find()
             .populate({
                 path: "id_order_detail",
-                select: "id_book",
-                populate: { path: "id_book", select: "_id" }
+                populate: { path: "id_book" }
             })
             .populate("id_user", "fullName")
             .sort({ createdAt: -1 });
 
-        // Lọc những review có order_detail hợp lệ và đúng bookId
         const filteredReviews = allReviews.filter(review =>
             review.id_order_detail && review.id_order_detail.id_book?._id.toString() === bookId
         );
