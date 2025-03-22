@@ -22,7 +22,7 @@ const getOrdersService = async (limit, page, status, queryString) => {
             filter.status = status;
         }
 
-       
+
         let sort = {};
         if (queryString.sort) {
             let sortField = queryString.sort;
@@ -53,13 +53,19 @@ const getOrdersService = async (limit, page, status, queryString) => {
                 .populate("id_delivery")
                 .exec();
         }
+        // Lấy tổng số đơn hàng không có filter
+        const totalOrders = await orderModel.countDocuments({});
+
+        // Lấy tổng số đơn hàng có filter
+        const total = await orderModel.countDocuments(filter);
 
         const defaultStatusCounts = {
-            "0": 0,  
-            "1": 0, 
-            "2": 0,  
-            "3": 0,  
-            "4": 0   
+            "0": 0,
+            "1": 0,
+            "2": 0,
+            "3": 0,
+            "4": 0,
+            "": totalOrders
         };
 
         const statusCounts = await orderModel.aggregate([
@@ -70,7 +76,6 @@ const getOrdersService = async (limit, page, status, queryString) => {
             defaultStatusCounts[item._id] = item.count;
         });
 
-        const total = await orderModel.countDocuments(filter);
 
         return { result, total, statusCounts: defaultStatusCounts };
     } catch (error) {

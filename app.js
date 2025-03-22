@@ -31,6 +31,7 @@ var reviewRouter = require('./routes/review');
 var bookLikeRouter = require('./routes/book-like');
 var deliveryRouter = require('./routes/delivery');
 var paymentRouter = require('./routes/payment');
+var statsRouter = require('./routes/stats');
 var vnpayRouter = require('./routes/vnpay');
 
 var app = express();
@@ -68,6 +69,7 @@ app.use('/api/v1', orderRouter);
 app.use('/api/v1', orderDetailRouter);
 app.use('/api/v1', reviewRouter);
 app.use('/api/v1', bookLikeRouter);
+app.use('/api/v1', statsRouter);
 app.use('/vnpay', vnpayRouter);
 
 
