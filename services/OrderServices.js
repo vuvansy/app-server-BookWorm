@@ -156,9 +156,16 @@ const updateOrderStatusService = async (id_order, new_status) => {
             await Promise.all(updatePromises);
         }
 
+        // Nếu trạng thái là 3 (thành công) -> Cập nhật isPaid = true
+        const updateData = { status: new_status };
+        if (new_status === 3) {
+            updateData.isPaid = true;
+            updateData.paidAt = new Date();
+        }
+
         const updatedOrder = await orderModel.findByIdAndUpdate(
             id_order,
-            { status: new_status },
+            updateData, // Truyền toàn bộ dữ liệu cần cập nhật
             { new: true }
         );
 

@@ -37,7 +37,7 @@ const getBookLikesByUserService = async (id_user) => {
 
 const deleteABookLikeService = async (id) => {
     try {
-        const result = await bookLikeModel.deleteById(id);
+        const result = await bookLikeModel.findByIdAndDelete(id);
 
         if (!result) {
             throw new Error("Thể loại không tồn tại hoặc không thể xóa.");
