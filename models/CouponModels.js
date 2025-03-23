@@ -1,5 +1,4 @@
 const mongoose = require("mongoose");
-const mongoose_delete = require('mongoose-delete');
 const Schema = mongoose.Schema;
 const ObjectId = Schema.ObjectId;
 
@@ -16,7 +15,6 @@ const coupon = new Schema({
     end_date: { type: Date },
 }, { timestamps: true });
 
-// Override all methods
-coupon.plugin(mongoose_delete, { overrideMethods: 'all' });
+
 
 module.exports = mongoose.models.coupon || mongoose.model("coupon", coupon);
