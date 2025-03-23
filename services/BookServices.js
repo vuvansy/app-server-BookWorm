@@ -403,6 +403,96 @@ const restoreDeletedBookService = async (id) => {
 };
 
 
+const getTrendingProductsService = async ({ page, limit, all, id_genre, sort }) => {
+    try {
+        page = parseInt(page) || 1;
+        limit = parseInt(limit) || 10;
+        const offset = (page - 1) * limit;
+        const matchStage = {};
+        if (id_genre) {
+            matchStage.id_genre = new mongoose.Types.ObjectId(id_genre);
+        }
+
+        let trendingQuery = [
+            { $match: matchStage },
+            {
+                $lookup: {
+                    from: "order_details",
+                    localField: "_id",
+                    foreignField: "id_book",
+                    as: "order_data"
+                }
+            },
+            {
+                $addFields: {
+                    total_sold: { $sum: "$order_data.quantity" }
+                }
+            },
+
+            {
+                $lookup: {
+                    from: "orders",
+                    localField: "order_data.id_order",
+                    foreignField: "_id",
+                    as: "order_info"
+                }
+            },
+            {
+                $addFields: {
+                    latest_order_date: { $max: "$order_info.createdAt" }
+                }
+            },
+
+            {
+                $addFields: {
+                    is_new: {
+                        $gte: ["$createdAt", new Date(new Date().setDate(new Date().getDate() - 15))]
+                    }
+                }
+            }
+        ];
+
+      
+        let sortStage = { total_sold: -1, latest_order_date: -1, is_new: -1 }; // Mặc định
+        if (sort) {
+            const isDescending = sort.startsWith("-");
+            const sortField = isDescending ? sort.substring(1) : sort;
+            const sortOrder = isDescending ? -1 : 1;
+
+            if (["price_new", "name"].includes(sortField)) {
+                sortStage = { [sortField]: sortOrder };
+            }
+        }
+
+        trendingQuery.push({ $sort: sortStage });
+
+        if (all) {
+            trendingQuery.push({ $skip: offset }, { $limit: limit });
+        } else {
+            trendingQuery.push({ $limit: 10 });
+        }
+
+       
+        let result = await bookModel.aggregate(trendingQuery);
+        let response = { result };
+
+        if (all) {
+            let totalBooks = await bookModel.countDocuments(matchStage);
+            response.meta = {
+                page,
+                limit,
+                total: totalBooks,
+                pages: Math.ceil(totalBooks / limit)
+            };
+        }
+
+        return response;
+    } catch (error) {
+        throw new Error(error.message);
+    }
+};
+
+
 
 module.exports = {
     getAllBookService,
@@ -415,5 +505,6 @@ module.exports = {
     getNewBooksService,
     searchBooksService,
     getDeletedBooksService,
-    restoreDeletedBookService
+    restoreDeletedBookService,
+    getTrendingProductsService
 }

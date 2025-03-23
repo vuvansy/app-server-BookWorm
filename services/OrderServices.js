@@ -6,7 +6,83 @@ const bookModel = require("../models/BookModels");
 const aqp = require('api-query-params');
 const mailer = require("nodemailer");
 const getConstants = require("../helpers/constants").getConstants;
+const paymentModel = require("../models/PaymentModels");
 require("dotenv").config();
+
+const getOrdersService = async (limit, page, status, queryString) => {
+    try {
+        let filter = {};
+        const parsedQuery = aqp(queryString);
+        const queryFilter = parsedQuery.filter || {};
+        const querySort = parsedQuery.sort || {};
+
+        delete queryFilter.page;
+
+        if (status) {
+            filter.status = status;
+        }
+
+
+        let sort = {};
+        if (queryString.sort) {
+            let sortField = queryString.sort;
+            if (sortField.startsWith('-')) {
+                sortField = sortField.substring(1);
+                sort[sortField] = -1;
+            } else {
+                sort[sortField] = 1;
+            }
+        } else {
+            sort = { createdAt: 1 };
+        }
+
+        let result;
+        if (page && limit) {
+            let offset = (page - 1) * limit;
+            result = await orderModel.find(filter)
+                .skip(offset)
+                .limit(limit)
+                .sort(sort)
+                .populate("id_payment")
+                .populate("id_delivery")
+                .exec();
+        } else {
+            result = await orderModel.find(filter)
+                .sort(sort)
+                .populate("id_payment")
+                .populate("id_delivery")
+                .exec();
+        }
+        // Lấy tổng số đơn hàng không có filter
+        const totalOrders = await orderModel.countDocuments({});
+
+        // Lấy tổng số đơn hàng có filter
+        const total = await orderModel.countDocuments(filter);
+
+        const defaultStatusCounts = {
+            "0": 0,
+            "1": 0,
+            "2": 0,
+            "3": 0,
+            "4": 0,
+            "": totalOrders
+        };
+
+        const statusCounts = await orderModel.aggregate([
+            { $group: { _id: "$status", count: { $sum: 1 } } }
+        ]);
+
+        statusCounts.forEach(item => {
+            defaultStatusCounts[item._id] = item.count;
+        });
+
+
+        return { result, total, statusCounts: defaultStatusCounts };
+    } catch (error) {
+        console.log("error >>>> ", error);
+        return null;
+    }
+};
 
 const getOrdersByUserService = async (id_user) => {
     try {
@@ -71,7 +147,7 @@ const updateOrderStatusService = async (id_order, new_status) => {
             // Hoàn lại số lượng sách vào kho
             const updatePromises = orderDetails.map((item) => {
                 return bookModel.findByIdAndUpdate(
-                    item.id_book, 
+                    item.id_book,
                     { $inc: { quantity: item.quantity } },
                     { new: true }
                 );
@@ -80,9 +156,16 @@ const updateOrderStatusService = async (id_order, new_status) => {
             await Promise.all(updatePromises);
         }
 
+        // Nếu trạng thái là 3 (thành công) -> Cập nhật isPaid = true
+        const updateData = { status: new_status };
+        if (new_status === 3) {
+            updateData.isPaid = true;
+            updateData.paidAt = new Date();
+        }
+
         const updatedOrder = await orderModel.findByIdAndUpdate(
             id_order,
-            { status: new_status },
+            updateData, // Truyền toàn bộ dữ liệu cần cập nhật
             { new: true }
         );
 
@@ -160,8 +243,10 @@ const createOrderService = async (orderData) => {
             await coupon.save();
         }
 
-        // Gửi email xác nhận đơn hàng nếu có email
-        if (orderData.email) {
+        // Gửi email xác nhận đơn hàng nếu có email & không phải thanh toán VNPay
+        const paymentMethod = await paymentModel.findById(id_payment);
+        console.log(paymentMethod?.name.toLowerCase());
+        if (orderData.email && paymentMethod?.name.toLowerCase() !== "thanh toán qua vnpay") {
             await sendOrderConfirmationEmail(orderData.email, populatedOrder);
         }
 
@@ -170,6 +255,61 @@ const createOrderService = async (orderData) => {
         return { success: false, message: "Lỗi tạo đơn hàng", error: error.message };
     }
 };
+
+const updateOrderPaymentStatusService = async (orderId, isPaid) => {
+    try {
+        if (!orderId) {
+            return { success: false, message: "Thiếu thông tin orderId!" };
+        }
+
+        const order = await orderModel
+            .findById(orderId)
+            .populate("id_user")
+            .populate("id_payment")
+            .populate("id_delivery");
+
+        if (!order) {
+            return { success: false, message: "Không tìm thấy đơn hàng!" };
+        }
+
+        if (isPaid) {
+            order.isPaid = true;
+            order.paidAt = new Date();
+            await order.save();
+
+            if (order.id_user?.email) {
+                await sendOrderConfirmationEmail(order.id_user.email, order);
+            }
+
+            return { success: true, message: "Thanh toán thành công, đã cập nhật đơn hàng!", order };
+        } else {
+            const orderDetails = await orderDetailModel.find({ id_order: orderId });
+            // console.log(orderDetails);
+            if (orderDetails.length === 0) {
+                return { success: false, message: "Không tìm thấy chi tiết đơn hàng!" };
+            }
+
+            // console.log(orderDetails);
+            const updatePromises = orderDetails.map((item) => {
+                return bookModel.findByIdAndUpdate(
+                    item.id_book,
+                    { $inc: { quantity: item.quantity } },
+                    { new: true }
+                );
+            });
+
+            await Promise.all(updatePromises);
+
+            order.status = 4; // Status 4: Thanh toán thất bại
+            await order.save();
+            return { success: true, message: "Thanh toán thất bại, đã cập nhật trạng thái đơn hàng!", order };
+        }
+    } catch (error) {
+        return { success: false, message: "Lỗi hệ thống khi cập nhật thanh toán", error: error.message };
+    }
+};
+
+
 
 // Hàm gửi email xác nhận đơn hàng
 const sendOrderConfirmationEmail = async (email, order) => {
@@ -243,5 +383,6 @@ const transporter = mailer.createTransport({
 
 module.exports = {
     createOrderService, getOrdersByUserService,
-    getOrderDetailByIdService, updateOrderStatusService
+    getOrderDetailByIdService, updateOrderStatusService,
+    updateOrderPaymentStatusService, getOrdersService
 }
