@@ -10,7 +10,8 @@ const {
     searchBooksService,
     getDeletedBooksService,
     restoreDeletedBookService,
-    getTrendingProductsService
+    getTrendingProductsService,
+    updateBookQuantityService
 
 } = require('../services/BookServices')
 
@@ -450,6 +451,40 @@ const getTrendingBooks = async (req, res) => {
     }
 };
 
+const updateBookQuantityAPI = async (req, res) => {
+    try {
+        const { bookId } = req.params;
+        const { quantity } = req.body;
+
+        if (!bookId || quantity === undefined) {
+            return res.status(400).json({ message: "Thiếu thông tin bookId hoặc quantity!" });
+        }
+
+        if (quantity <= 0) {
+            return res.status(400).json({ message: "Số lượng nhập thêm phải lớn hơn 0!" });
+        }
+
+        const updatedBook = await updateBookQuantityService(bookId, quantity);
+
+        if (!updatedBook.success) {
+            return res.status(500).json({ message: updatedBook.message, error: updatedBook.error });
+        }
+
+        return res.status(200).json({
+            statusCode: 200,
+            message: "Nhập thêm số lượng sách thành công!",
+            data: updatedBook.data
+        });
+    } catch (error) {
+        return res.status(500).json({
+            message: "Lỗi hệ thống khi cập nhật số lượng sách",
+            error: error.message
+        });
+    }
+};
+
+
+
 
 module.exports = {
     getBookAPI,
@@ -463,6 +498,7 @@ module.exports = {
     searchBooksAPI,
     getDeletedBooksAPI,
     restoreDeletedBookAPI,
-    getTrendingBooks
+    getTrendingBooks,
+    updateBookQuantityAPI
 
 }

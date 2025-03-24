@@ -452,7 +452,7 @@ const getTrendingProductsService = async ({ page, limit, all, id_genre, sort }) 
             }
         ];
 
-      
+
         let sortStage = { total_sold: -1, latest_order_date: -1, is_new: -1 }; // Mặc định
         if (sort) {
             const isDescending = sort.startsWith("-");
@@ -472,7 +472,7 @@ const getTrendingProductsService = async ({ page, limit, all, id_genre, sort }) 
             trendingQuery.push({ $limit: 10 });
         }
 
-       
+
         let result = await bookModel.aggregate(trendingQuery);
         let response = { result };
 
@@ -492,6 +492,25 @@ const getTrendingProductsService = async ({ page, limit, all, id_genre, sort }) 
     }
 };
 
+const updateBookQuantityService = async (bookId, quantity) => {
+    try {
+        const book = await bookModel.findById(bookId);
+        if (!book) {
+            return { success: false, message: "Không tìm thấy sách!" };
+        }
+        const currentQuantity = Number(book.quantity);
+        const addedQuantity = Number(quantity);
+
+        book.quantity = currentQuantity + addedQuantity;
+        await book.save();
+
+        return { success: true, data: book };
+    } catch (error) {
+        console.error("Lỗi cập nhật số lượng sách:", error);
+        return { success: false, message: "Lỗi hệ thống", error: error.message };
+    }
+};
+
 
 
 module.exports = {
@@ -506,5 +525,6 @@ module.exports = {
     searchBooksService,
     getDeletedBooksService,
     restoreDeletedBookService,
-    getTrendingProductsService
+    getTrendingProductsService,
+    updateBookQuantityService
 }

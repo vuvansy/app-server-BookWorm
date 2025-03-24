@@ -13,7 +13,8 @@ const {
     searchBooksAPI,
     getDeletedBooksAPI,
     restoreDeletedBookAPI,
-    getTrendingBooks
+    getTrendingBooks,
+    updateBookQuantityAPI
 } = require('../controllers/BookController')
 
 
@@ -25,6 +26,7 @@ router.get('/book/new', getNewBooksAPI);
 router.get('/book/search', searchBooksAPI);
 router.get('/book/:id/genre/:id_genre', getBooksByGenreAPI);
 router.put('/book/:id', putUpdateBook);
+router.put('/book/update-quantity/:bookId', updateBookQuantityAPI);
 router.delete('/book/:id', deleteABook);
 router.get('/book/deleted', getDeletedBooksAPI);
 router.patch("/book/restore/:id", restoreDeletedBookAPI);
