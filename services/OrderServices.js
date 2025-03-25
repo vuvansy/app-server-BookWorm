@@ -84,24 +84,60 @@ const getOrdersService = async (limit, page, status, queryString) => {
     }
 };
 
-const getOrdersByUserService = async (id_user) => {
+const getOrdersByUserService = async (id_user, status) => {
     try {
         if (!id_user) {
             return { success: false, message: "Thiếu ID người dùng!" };
         }
 
+        const userId = new mongoose.Types.ObjectId(id_user);
+
+        const totalOrders = await orderModel.find({ id_user: userId });
+
+        let filter = { id_user: userId };
+        if (status) {
+            filter.status = status;
+        }
+
         const orders = await orderModel
-            .find({ id_user })
+            .find(filter)
             .sort({ createdAt: -1 })
             .populate("id_payment")
             .populate("id_delivery");
 
+        const statusCounts = await orderModel.aggregate([
+            { $match: { id_user: userId } },
+            { $group: { _id: "$status", count: { $sum: 1 } } }
+        ]);
 
-        return { success: true, data: orders };
+        const defaultStatusCounts = {
+            "0": 0, 
+            "1": 0, 
+            "2": 0, 
+            "3": 0, 
+            "4": 0, 
+            "": totalOrders.length 
+        };
+
+        statusCounts.forEach(item => {
+            defaultStatusCounts[item._id.toString()] = item.count;
+        });
+
+        return {
+            success: true,
+            data: orders,
+            statusCounts: defaultStatusCounts
+        };
     } catch (error) {
-        return { success: false, message: "Lỗi hệ thống khi lấy danh sách đơn hàng", error: error.message };
+        console.log("Error >>>", error);
+        return {
+            success: false,
+            message: "Lỗi hệ thống khi lấy danh sách đơn hàng",
+            error: error.message
+        };
     }
 };
+
 
 const getOrderDetailByIdService = async (id_order) => {
     try {

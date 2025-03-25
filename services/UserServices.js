@@ -301,6 +301,22 @@ const createArrayUserService = async (arrUsers) => {
         let failedUsers = [];
 
         for (let user of arrUsers) {
+            // Nếu user chưa có `address`, thì tạo address từ các trường riêng lẻ
+            if (!user.address) {
+                user.address = {
+                    city: user.city || null,
+                    district: user.district || null,
+                    ward: user.ward || null,
+                    street: user.street || ""
+                };
+
+                // Xóa các thuộc tính cũ
+                delete user.city;
+                delete user.district;
+                delete user.ward;
+                delete user.street;
+            }
+
             // Kiểm tra user đã tồn tại chưa (giả sử email là duy nhất)
             const exists = await userModel.findOne({ email: user.email });
 
@@ -338,6 +354,7 @@ const createArrayUserService = async (arrUsers) => {
         return { success: false, message: "Lỗi khi thêm user!", error: error.message };
     }
 };
+
 
 module.exports = {
     getAllUserService, createUserService, loginUserService, getUserByTokenService,
