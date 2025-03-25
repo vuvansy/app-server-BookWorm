@@ -6,7 +6,8 @@ require("dotenv").config();
 const { getAllUserService, createUserService,
     loginUserService, getUserByTokenService,
     updateUserService, blockUserService, deleteUserService,
-    forgotPasswordService, resetPasswordService, changePasswordService
+    forgotPasswordService, resetPasswordService, changePasswordService,
+    createArrayUserService
 } = require('../services/UserServices')
 
 
@@ -69,6 +70,41 @@ const postCreateUserAPI = async (req, res) => {
         });
     }
 }
+
+const postCreateArrayUser = async (req, res) => {
+    const arrUsers = req.body.users; // Lấy danh sách users từ request body
+    if (!Array.isArray(arrUsers) || arrUsers.length === 0) {
+        return res.status(400).json({
+            statusCode: 400,
+            message: "Danh sách user không hợp lệ!",
+        });
+    }
+
+    let result = await createArrayUserService(arrUsers);
+    if (!result.success) {
+        return res.status(400).json({
+            statusCode: 400,
+            message: result.message,
+            data: {
+                countSuccess: result.addedCount,
+                countError: result.failedCount,
+                dataError: result.failedUsers
+            }
+        });
+    }
+
+    return res.status(201).json({
+        statusCode: 201,
+        message: result.message,
+        data: {
+            countSuccess: result.addedCount,
+            countError: result.failedCount,
+            dataSuccess: result.data,
+            dataError: result.failedUsers
+        }
+    });
+};
+
 
 const deleteUser = async (req, res) => {
     let { id } = req.params;
@@ -355,6 +391,6 @@ const transporter = mailer.createTransport({
 module.exports = {
     getUsersAPI, postCreateUserAPI, loginUserAPI, getUserAccount, logoutUserAPI,
     updateUserAPI, blockUserAPI, deleteUser, forgotPasswordAPI, resetPasswordAPI,
-    changePasswordAPI
+    changePasswordAPI, postCreateArrayUser
 }
 

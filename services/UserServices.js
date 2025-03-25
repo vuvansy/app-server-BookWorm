@@ -295,8 +295,52 @@ const changePasswordService = async (userId, current_password, new_password, con
 };
 
 
+const createArrayUserService = async (arrUsers) => {
+    try {
+        let validUsers = [];
+        let failedUsers = [];
+
+        for (let user of arrUsers) {
+            // Kiểm tra user đã tồn tại chưa (giả sử email là duy nhất)
+            const exists = await userModel.findOne({ email: user.email });
+
+            if (exists) {
+                failedUsers.push({ ...user, reason: "User đã tồn tại" });
+            } else {
+                validUsers.push(user);
+            }
+        }
+
+        // Nếu không có user hợp lệ, trả về kết quả
+        if (validUsers.length === 0) {
+            return {
+                success: false,
+                message: "Không có user nào được thêm mới!",
+                addedCount: 0,
+                failedCount: failedUsers.length,
+                failedUsers
+            };
+        }
+
+        // Thêm user vào DB
+        const insertedUsers = await userModel.insertMany(validUsers, { ordered: false });
+
+        return {
+            success: true,
+            message: "Thêm mới user thành công!",
+            addedCount: insertedUsers.length,
+            failedCount: failedUsers.length,
+            failedUsers,
+            data: insertedUsers
+        };
+    } catch (error) {
+        console.log("error >>>> ", error);
+        return { success: false, message: "Lỗi khi thêm user!", error: error.message };
+    }
+};
+
 module.exports = {
     getAllUserService, createUserService, loginUserService, getUserByTokenService,
     updateUserService, blockUserService, deleteUserService, forgotPasswordService,
-    resetPasswordService, changePasswordService
+    resetPasswordService, changePasswordService, createArrayUserService
 }

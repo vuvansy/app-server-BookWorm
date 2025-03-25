@@ -57,12 +57,15 @@ const getRevenueStatsServices = async (year, month) => {
         let startDate, endDate, groupBy, formatKey;
         let resultType = "month"; // Mặc định trả về theo tháng
 
+        const currentDate = new Date();
+        const currentMonth = currentDate.getMonth() + 1;
+        const currentYear = currentDate.getFullYear();
+
         if (year && month) {
-            // **Tính toán ngày đầu & cuối của tháng**
+            // **Lấy dữ liệu theo tuần trong tháng**
             startDate = new Date(year, month - 1, 1);
             endDate = new Date(year, month, 0);
 
-            // **Tính toán tuần của tháng**
             groupBy = {
                 year: { $year: "$createdAt" },
                 month: { $month: "$createdAt" },
@@ -119,13 +122,12 @@ const getRevenueStatsServices = async (year, month) => {
 
         if (resultType === "week") {
             // **Trả về theo tuần của tháng**
-            const totalWeeks = Math.ceil(endDate.getDate() / 7); // Số tuần trong tháng
+            const totalWeeks = Math.ceil(endDate.getDate() / 7);
 
             for (let i = 0; i < totalWeeks; i++) {
                 formattedResult[`${year}-W${i + 1}`] = 0;
             }
 
-            // **Cập nhật dữ liệu từ MongoDB**
             revenueData.forEach(item => {
                 let key = `${item._id.year}-W${item._id.weekOfMonth + 1}`;
                 formattedResult[key] = item.totalRevenue;
@@ -134,7 +136,7 @@ const getRevenueStatsServices = async (year, month) => {
             // **Trả về theo tháng**
             let monthsRange = year ? 12 : 6;
             let startMonth = year ? 1 : currentMonth - 5;
-            let startYear = currentYear;
+            let startYear = year ? year : currentYear;
 
             if (startMonth <= 0) {
                 startMonth += 12;
@@ -148,7 +150,6 @@ const getRevenueStatsServices = async (year, month) => {
                 formattedResult[`${actualYear}-${actualMonth}`] = 0;
             }
 
-            // **Cập nhật dữ liệu từ MongoDB**
             revenueData.forEach(item => {
                 let key = `${item._id.year}-${item._id.month}`;
                 formattedResult[key] = item.totalRevenue;
@@ -172,7 +173,6 @@ const getUserStatsService = async (year, month) => {
         const currentMonth = new Date().getMonth() + 1;
 
         if (year && month) {
-
             startDate = new Date(year, month - 1, 1);
             endDate = new Date(year, month, 0);
             groupBy = {
@@ -189,13 +189,11 @@ const getUserStatsService = async (year, month) => {
             formatKey = "_id.weekOfMonth";
             resultType = "week";
         } else if (year) {
-
             startDate = new Date(year, 0, 1);
             endDate = new Date(year, 11, 31);
             groupBy = { year: { $year: "$createdAt" }, month: { $month: "$createdAt" } };
             formatKey = "_id.month";
         } else {
-
             let startMonth = currentMonth - 5;
             let startYear = currentYear;
 
@@ -226,7 +224,6 @@ const getUserStatsService = async (year, month) => {
         let formattedResult = {};
 
         if (resultType === "week") {
-
             const totalWeeks = Math.ceil(endDate.getDate() / 7);
 
             for (let i = 0; i < totalWeeks; i++) {
@@ -234,14 +231,13 @@ const getUserStatsService = async (year, month) => {
             }
 
             userData.forEach(item => {
-                let key = `${item._id.year}-W${item._id.weekOfMonth + 1}`;
+                let key = `${year}-W${item._id.weekOfMonth + 1}`;
                 formattedResult[key] = item.totalUsers;
             });
         } else {
-
             let monthsRange = year ? 12 : 6;
             let startMonth = year ? 1 : currentMonth - 5;
-            let startYear = currentYear;
+            let startYear = year ? year : currentYear;
 
             if (startMonth <= 0) {
                 startMonth += 12;
@@ -295,13 +291,15 @@ const getOrderStatsService = async (year, month) => {
             formatKey = "_id.weekOfMonth";
             resultType = "week";
         } else if (year) {
-
             startDate = new Date(year, 0, 1);
             endDate = new Date(year, 11, 31);
-            groupBy = { year: { $year: "$createdAt" }, month: { $month: "$createdAt" }, status: "$status" };
+            groupBy = {
+                year: { $year: "$createdAt" },
+                month: { $month: "$createdAt" },
+                status: "$status"
+            };
             formatKey = "_id.month";
         } else {
-
             let startMonth = currentMonth - 5;
             let startYear = currentYear;
 
@@ -316,9 +314,7 @@ const getOrderStatsService = async (year, month) => {
             formatKey = "_id.month";
         }
 
-
         filter.createdAt = { $gte: startDate, $lte: endDate };
-
 
         const orderData = await orderModel.aggregate([
             { $match: filter },
@@ -340,7 +336,6 @@ const getOrderStatsService = async (year, month) => {
         let formattedResult = {};
 
         if (resultType === "week") {
-            // **Trả về theo tuần của tháng**
             const totalWeeks = Math.ceil(endDate.getDate() / 7);
 
             for (let i = 0; i < totalWeeks; i++) {
@@ -348,7 +343,7 @@ const getOrderStatsService = async (year, month) => {
             }
 
             orderData.forEach(item => {
-                let key = `${item._id.year}-W${item._id.weekOfMonth + 1}`;
+                let key = `${year}-W${item._id.weekOfMonth + 1}`;
                 let status = statusMap[item._id.status];
 
                 if (!formattedResult[key]) {
@@ -358,10 +353,9 @@ const getOrderStatsService = async (year, month) => {
                 formattedResult[key][status] = item.totalOrders;
             });
         } else {
-
             let monthsRange = year ? 12 : 6;
             let startMonth = year ? 1 : currentMonth - 5;
-            let startYear = currentYear;
+            let startYear = year ? year : currentYear;
 
             if (startMonth <= 0) {
                 startMonth += 12;
@@ -372,11 +366,11 @@ const getOrderStatsService = async (year, month) => {
                 let actualMonth = (startMonth + i - 1) % 12 + 1;
                 let actualYear = startYear + Math.floor((startMonth + i - 1) / 12);
 
-                formattedResult[`${actualYear}-${actualMonth}`] = { shipping: 0, completed: 0, cancelled: 0 };
+                formattedResult[`${year}-${actualMonth}`] = { shipping: 0, completed: 0, cancelled: 0 };
             }
 
             orderData.forEach(item => {
-                let key = `${item._id.year}-${item._id.month}`;
+                let key = `${year}-${item._id.month}`;
                 let status = statusMap[item._id.status];
 
                 if (!formattedResult[key]) {
@@ -393,6 +387,8 @@ const getOrderStatsService = async (year, month) => {
         return { success: false, message: "Lỗi hệ thống", error: error.message };
     }
 };
+
+
 
 const getLowStockBooksService = async () => {
     try {
