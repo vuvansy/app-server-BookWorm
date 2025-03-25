@@ -181,7 +181,7 @@ const deleteCouponService = async (id) => {
             throw new Error("Mã giảm giá không tồn tại!");
         }
 
-        const result = await couponModel.deleteById(id);
+        const result = await couponModel.deleteOne({ _id: id });
 
         if (!result) {
             throw new Error("Không thể xóa mã giảm giá.");
@@ -195,7 +195,7 @@ const deleteCouponService = async (id) => {
 };
 
 const updateCouponStatusService = async (id) => {
-    const result = await couponModel.findByIdAndDelete(id);
+    const result = await couponModel.findById(id);
     if (!result) {
         throw new Error("Mã giảm giá không tồn tại");
     }

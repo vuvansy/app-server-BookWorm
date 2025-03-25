@@ -46,7 +46,9 @@ const getOrdersAPI = async (req, res) => {
 const getOrdersByUser = async (req, res) => {
     try {
         const { id_user } = req.params;
-        const result = await getOrdersByUserService(id_user);
+        const { status } = req.query;
+
+        const result = await getOrdersByUserService(id_user, status);
 
         if (!result.success) {
             return res.status(404).json({ message: result.message });
@@ -55,7 +57,12 @@ const getOrdersByUser = async (req, res) => {
         return res.status(200).json({
             statusCode: 200,
             message: "Lấy danh sách đơn hàng thành công!",
-            data: result.data,
+            data: {
+                meta: {
+                    statusCounts: result.statusCounts
+                },
+                result: result.data,
+            }
         });
     } catch (error) {
         return res.status(500).json({
@@ -64,6 +71,8 @@ const getOrdersByUser = async (req, res) => {
         });
     }
 };
+
+
 
 const getOrderDetailById = async (req, res) => {
     try {

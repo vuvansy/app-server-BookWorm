@@ -1,7 +1,8 @@
 var express = require('express');
 var router = express.Router();
 
-const { getUsersAPI, postCreateUserAPI, updateUserAPI, blockUserAPI, deleteUser
+const { getUsersAPI, postCreateUserAPI, updateUserAPI, blockUserAPI, deleteUser,
+  postCreateArrayUser
 } = require('../controllers/UserController')
 
 
@@ -14,6 +15,7 @@ router.get('/', function (req, res, next) {
 
 router.get('/user', getUsersAPI);
 router.post('/user', postCreateUserAPI);
+router.post('/user-many', postCreateArrayUser);
 router.put("/user/:id", updateUserAPI);
 router.patch("/user/:id", blockUserAPI);
 router.delete('/user/:id', deleteUser);
