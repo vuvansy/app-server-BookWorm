@@ -281,9 +281,7 @@ const getOrderStatsService = async (year, month) => {
                 month: { $month: "$createdAt" },
                 weekOfMonth: {
                     $floor: {
-                        $divide: [
-                            { $subtract: [{ $dayOfMonth: "$createdAt" }, 1] }, 7
-                        ]
+                        $divide: [{ $subtract: [{ $dayOfMonth: "$createdAt" }, 1] }, 7]
                     }
                 },
                 status: "$status"
@@ -366,11 +364,11 @@ const getOrderStatsService = async (year, month) => {
                 let actualMonth = (startMonth + i - 1) % 12 + 1;
                 let actualYear = startYear + Math.floor((startMonth + i - 1) / 12);
 
-                formattedResult[`${year}-${actualMonth}`] = { shipping: 0, completed: 0, cancelled: 0 };
+                formattedResult[`${actualYear}-${actualMonth}`] = { shipping: 0, completed: 0, cancelled: 0 };
             }
 
             orderData.forEach(item => {
-                let key = `${year}-${item._id.month}`;
+                let key = `${item._id.year}-${item._id.month}`;
                 let status = statusMap[item._id.status];
 
                 if (!formattedResult[key]) {
@@ -387,7 +385,6 @@ const getOrderStatsService = async (year, month) => {
         return { success: false, message: "Lỗi hệ thống", error: error.message };
     }
 };
-
 
 
 const getLowStockBooksService = async () => {
