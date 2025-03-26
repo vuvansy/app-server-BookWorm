@@ -171,45 +171,45 @@ const loginUserService = async (email, password) => {
             };
         }
 
-            const userData = {
-                id: result._id,
-                fullName: result.fullName,
-                email: result.email,
-                phone: result.phone,
-                role: result.role,
-                image: result.image || null,
-                address: result.address
-            };
+        const userData = {
+            id: result._id,
+            fullName: result.fullName,
+            email: result.email,
+            phone: result.phone,
+            role: result.role,
+            image: result.image || null,
+            address: result.address
+        };
 
-            const access_token = jwt.sign(
-                userData,
-                process.env.ACCESS_TOKEN_SECRET,
-                { expiresIn: process.env.ACCESS_TOKEN_EXPIRES }
-            );
+        const access_token = jwt.sign(
+            userData,
+            process.env.ACCESS_TOKEN_SECRET,
+            { expiresIn: process.env.ACCESS_TOKEN_EXPIRES }
+        );
 
-            const refresh_token = jwt.sign(
-                { id: result._id },
-                process.env.REFRESH_TOKEN_SECRET,
-                { expiresIn: process.env.REFRESH_TOKEN_EXPIRES }
-            );
-            return {
-                message: "Đăng nhập thành công",
-                statusCode: 200,
-                data: {
-                    access_token,
-                    refresh_token,
-                    user: {
-                        id: result._id,
-                        fullName: result.fullName,
-                        email: result.email,
-                        phone: result.phone,
-                        role: result.role,
-                        image: result.image,
-                        address: result.address
-                    },
+        const refresh_token = jwt.sign(
+            { id: result._id },
+            process.env.REFRESH_TOKEN_SECRET,
+            { expiresIn: process.env.REFRESH_TOKEN_EXPIRES }
+        );
+        return {
+            message: "Đăng nhập thành công",
+            statusCode: 200,
+            data: {
+                access_token,
+                refresh_token,
+                user: {
+                    id: result._id,
+                    fullName: result.fullName,
+                    email: result.email,
+                    phone: result.phone,
+                    role: result.role,
+                    image: result.image,
+                    address: result.address
                 },
-            };
-        
+            },
+        };
+
     } catch (error) {
         console.error("Login Error:", error);
         return { status: 500, message: "Lỗi server" };
@@ -300,37 +300,40 @@ const createArrayUserService = async (arrUsers) => {
         let validUsers = [];
         let failedUsers = [];
 
+        const emails = arrUsers.map(user => user.email);
+        const existingUsers = await userModel.find({ email: { $in: emails } });
+
+        const existingEmails = new Set(existingUsers.map(user => user.email));
+
         for (let user of arrUsers) {
-            // Nếu user chưa có `address`, thì tạo address từ các trường riêng lẻ
-            if (!user.address) {
-                user.address = {
-                    city: user.city || null,
-                    district: user.district || null,
-                    ward: user.ward || null,
-                    street: user.street || ""
-                };
-
-                // Xóa các thuộc tính cũ
-                delete user.city;
-                delete user.district;
-                delete user.ward;
-                delete user.street;
+            if (existingEmails.has(user.email)) {
+                failedUsers.push({ ...user, reason: "Email đã tồn tại" });
+                continue;
             }
 
-            // Kiểm tra user đã tồn tại chưa (giả sử email là duy nhất)
-            const exists = await userModel.findOne({ email: user.email });
+            user.address = user.address || {
+                city: null,
+                district: null,
+                ward: null,
+                street: "",
+            };
 
-            if (exists) {
-                failedUsers.push({ ...user, reason: "User đã tồn tại" });
-            } else {
-                validUsers.push(user);
+            user.role = user.role || "USER";
+            user.isBlocked = user.isBlocked !== undefined ? user.isBlocked : false;
+            user.image = user.image || "/avatar.jpg";
+
+
+            if (user.password) {
+                const salt = bcrypt.genSaltSync(10);
+                user.password = await bcrypt.hash(user.password, salt);
             }
+
+            validUsers.push(user);
         }
-
-        // Nếu không có user hợp lệ, trả về kết quả
         if (validUsers.length === 0) {
             return {
                 success: false,
+                statusCode: 400,
                 message: "Không có user nào được thêm mới!",
                 addedCount: 0,
                 failedCount: failedUsers.length,
@@ -338,20 +341,20 @@ const createArrayUserService = async (arrUsers) => {
             };
         }
 
-        // Thêm user vào DB
         const insertedUsers = await userModel.insertMany(validUsers, { ordered: false });
 
         return {
             success: true,
-            message: "Thêm mới user thành công!",
+            statusCode: 201,
+            message: "Bulk Users",
             addedCount: insertedUsers.length,
             failedCount: failedUsers.length,
             failedUsers,
             data: insertedUsers
         };
     } catch (error) {
-        console.log("error >>>> ", error);
-        return { success: false, message: "Lỗi khi thêm user!", error: error.message };
+        console.log("Lỗi >>>>", error);
+        return { success: false, statusCode: 500, message: "Lỗi khi thêm user!", error: error.message };
     }
 };
 

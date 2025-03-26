@@ -72,7 +72,9 @@ const postCreateUserAPI = async (req, res) => {
 }
 
 const postCreateArrayUser = async (req, res) => {
-    const arrUsers = req.body.users; // Lấy danh sách users từ request body
+   
+    const arrUsers = req.body;
+
     if (!Array.isArray(arrUsers) || arrUsers.length === 0) {
         return res.status(400).json({
             statusCode: 400,
@@ -81,26 +83,26 @@ const postCreateArrayUser = async (req, res) => {
     }
 
     let result = await createArrayUserService(arrUsers);
+
     if (!result.success) {
-        return res.status(400).json({
-            statusCode: 400,
+        return res.status(result.statusCode).json({
+            statusCode: result.statusCode,
             message: result.message,
             data: {
                 countSuccess: result.addedCount,
                 countError: result.failedCount,
-                dataError: result.failedUsers
+                detail: result.failedUsers
             }
         });
     }
 
     return res.status(201).json({
         statusCode: 201,
-        message: result.message,
+        message: "Bulk Users",
         data: {
             countSuccess: result.addedCount,
             countError: result.failedCount,
-            dataSuccess: result.data,
-            dataError: result.failedUsers
+            detail: "Ok"
         }
     });
 };
