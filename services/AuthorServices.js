@@ -65,7 +65,55 @@ const deleteAuthorService = async (id) => {
     }
 };
 
+const createArrayAuthorService = async (arrAuthors) => {
+    try {
+        let validAuthors = [];
+        let failedAuthors = [];
+
+        const names = arrAuthors.map(author => author.name);
+        const existingAuthors = await authorModel.find({ name: { $in: names } });
+
+        const existingNames = new Set(existingAuthors.map(author => author.name));
+
+        for (let author of arrAuthors) {
+            if (existingNames.has(author.name)) {
+                failedAuthors.push({ ...author, reason: "Tên tác giả đã tồn tại" });
+                continue;
+            }
+
+            validAuthors.push(author);
+        }
+
+        if (validAuthors.length === 0) {
+            return {
+                success: false,
+                statusCode: 400,
+                message: "Không có tác giả nào được thêm mới!",
+                addedCount: 0,
+                failedCount: failedAuthors.length,
+                failedAuthors
+            };
+        }
+
+        const insertedAuthors = await authorModel.insertMany(validAuthors, { ordered: false });
+
+        return {
+            success: true,
+            statusCode: 201,
+            message: "Bulk Authors",
+            addedCount: insertedAuthors.length,
+            failedCount: failedAuthors.length,
+            failedAuthors,
+            data: insertedAuthors
+        };
+    } catch (error) {
+        console.log("Lỗi >>>>", error);
+        return { success: false, statusCode: 500, message: "Lỗi khi thêm tác giả!", error: error.message };
+    }
+};
+
+
 module.exports = {
     getAllAuthorService, createAuthorService, updateAuthorService,
-    deleteAuthorService
+    deleteAuthorService, createArrayAuthorService
 }

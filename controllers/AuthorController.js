@@ -1,6 +1,6 @@
 const {
     getAllAuthorService, createAuthorService, updateAuthorService,
-    deleteAuthorService
+    deleteAuthorService, createArrayAuthorService
 } = require('../services/AuthorServices')
 
 
@@ -134,8 +134,43 @@ const deleteAuthorAPI = async (req, res) => {
     }
 };
 
+const postCreateArrayAuthor = async (req, res) => {
+    const arrAuthors = req.body;
+
+    if (!Array.isArray(arrAuthors) || arrAuthors.length === 0) {
+        return res.status(400).json({
+            statusCode: 400,
+            message: "Danh sách tác giả không hợp lệ!",
+        });
+    }
+
+    let result = await createArrayAuthorService(arrAuthors);
+
+    if (!result.success) {
+        return res.status(result.statusCode).json({
+            statusCode: result.statusCode,
+            message: result.message,
+            data: {
+                countSuccess: result.addedCount,
+                countError: result.failedCount,
+                detail: result.failedAuthors
+            }
+        });
+    }
+
+    return res.status(201).json({
+        statusCode: 201,
+        message: "Bulk Authors",
+        data: {
+            countSuccess: result.addedCount,
+            countError: result.failedCount,
+            detail: "Ok"
+        }
+    });
+};
+
 
 module.exports = {
     getAuthorAPI, postCreateAuthor,
-    updateAuthorAPI, deleteAuthorAPI
+    updateAuthorAPI, deleteAuthorAPI, postCreateArrayAuthor
 }
