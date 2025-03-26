@@ -188,7 +188,7 @@ const loginUserService = async (email, password) => {
         );
 
         const refresh_token = jwt.sign(
-            { id: result._id },
+            userData,
             process.env.REFRESH_TOKEN_SECRET,
             { expiresIn: process.env.REFRESH_TOKEN_EXPIRES }
         );

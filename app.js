@@ -36,23 +36,30 @@ var vnpayRouter = require('./routes/vnpay');
 
 var app = express();
 
-var corsOptionsDelegate = function (req, callback) {
-  var corsOptions = { origin: true };
-  callback(null, corsOptions);
-};
+// var corsOptionsDelegate = function (req, callback) {
+//   var corsOptions = { origin: true };
+//   callback(null, corsOptions);
+// };
+
+
+app.use(cors({
+  origin: true,
+  credentials: true,
+  methods: ['POST', 'PUT', 'GET', 'OPTIONS', 'HEAD']
+}));
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'hbs');
 app.use(logger('dev'));
-app.use(cors());
+// app.use(cors());
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
-app.use(cors(corsOptionsDelegate));
+// app.use(cors(corsOptionsDelegate));
 
 //Khai báo route
 app.use('/', indexRouter);

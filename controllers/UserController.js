@@ -72,7 +72,7 @@ const postCreateUserAPI = async (req, res) => {
 }
 
 const postCreateArrayUser = async (req, res) => {
-   
+
     const arrUsers = req.body;
 
     if (!Array.isArray(arrUsers) || arrUsers.length === 0) {
@@ -236,6 +236,13 @@ const logoutUserAPI = async (req, res) => {
         if (!token) {
             return res.status(401).json({ message: "Unauthorized" });
         }
+
+        res.clearCookie("refresh_token", {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === "production",
+            sameSite: "strict",
+            path: "/"
+        });
 
         return res.status(200).json({
             "message": "Đăng xuất thành công!",
