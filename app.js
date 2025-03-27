@@ -45,7 +45,7 @@ var app = express();
 app.use(cors({
   origin: true,
   credentials: true,
-  methods: ['POST', 'PUT', 'GET', 'OPTIONS', 'HEAD', 'PATCH']
+  methods: ['POST', 'PUT', 'GET', 'OPTIONS', 'HEAD', 'PATCH', "DELETE"]
 }));
 
 // view engine setup
