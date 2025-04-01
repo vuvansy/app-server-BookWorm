@@ -111,12 +111,12 @@ const getOrdersByUserService = async (id_user, status) => {
         ]);
 
         const defaultStatusCounts = {
-            "0": 0, 
-            "1": 0, 
-            "2": 0, 
-            "3": 0, 
-            "4": 0, 
-            "": totalOrders.length 
+            "0": 0,
+            "1": 0,
+            "2": 0,
+            "3": 0,
+            "4": 0,
+            "": totalOrders.length
         };
 
         statusCounts.forEach(item => {
@@ -190,6 +190,18 @@ const updateOrderStatusService = async (id_order, new_status) => {
             });
 
             await Promise.all(updatePromises);
+
+            // Nếu đơn hàng đã thanh toán online -> Cập nhật lại isPaid và paidAt
+            if (order.isPaid) {
+                await orderModel.findByIdAndUpdate(
+                    id_order,
+                    {
+                        isPaid: false,
+                        paidAt: null,
+                    },
+                    { new: true }
+                );
+            }
         }
 
         // Nếu trạng thái là 3 (thành công) -> Cập nhật isPaid = true

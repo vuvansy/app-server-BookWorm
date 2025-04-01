@@ -13,7 +13,6 @@ const getAllBookService = async (limit, page, name, queryString) => {
 
         delete queryFilter.page;
 
-        // 🔹 Lọc theo thể loại (genre)
         if (queryString.id_genre) {
             let genres = Array.isArray(queryString.id_genre)
                 ? queryString.id_genre
@@ -23,12 +22,10 @@ const getAllBookService = async (limit, page, name, queryString) => {
             filter.id_genre = { $in: genres };
         }
 
-        // 🔹 Lọc theo tên sách (name)
         if (queryFilter.name) {
             filter.name = { $regex: queryFilter.name, $options: 'i' };
         }
 
-        // 🔹 Lọc theo giá (price)
         if (queryFilter.price_min || queryFilter.price_max) {
             filter.price_new = {};
             if (queryFilter.price_min) {
@@ -39,7 +36,6 @@ const getAllBookService = async (limit, page, name, queryString) => {
             }
         }
 
-        // 🔹 Lọc theo tác giả (authors)
         if (queryString.authors) {
             let authors = Array.isArray(queryString.authors)
                 ? queryString.authors
@@ -49,7 +45,6 @@ const getAllBookService = async (limit, page, name, queryString) => {
             filter.authors = { $in: authors };
         }
 
-        // 🔹 Sắp xếp dữ liệu
         let sort = {};
         if (queryString.sort) {
             let sortField = queryString.sort;
@@ -63,7 +58,7 @@ const getAllBookService = async (limit, page, name, queryString) => {
             sort = { createdAt: -1 };
         }
 
-        // 🔹 Lấy danh sách sách theo phân trang hoặc toàn bộ
+
         if (page && limit) {
             let offset = (page - 1) * limit;
             result = await bookModel.find(filter)
@@ -181,14 +176,29 @@ const deleteABookService = async (id) => {
     }
 }
 
-const getFlashSaleBooksService = async ({ current, pageSize, all }) => {
+const getFlashSaleBooksService = async ({ page, limit, all, id_genre, sort }) => {
     try {
-        current = parseInt(current) || 1;
-        pageSize = parseInt(pageSize) || 10;
-        const offset = (current - 1) * pageSize;
+        page = parseInt(page) || 1;
+        limit = parseInt(limit) || 10;
+        const offset = (page - 1) * limit;
 
-        let booksQuery = [
-            { $match: { price_new: { $gt: 0 }, price_old: { $gt: 0 } } },
+        const matchStage = { price_new: { $gt: 0 }, price_old: { $gt: 0 } };
+        if (id_genre) {
+            matchStage.id_genre = new mongoose.Types.ObjectId(id_genre);
+        }
+
+        let sortStage = { discount: -1 }; 
+        if (sort) {
+            const isDescending = sort.startsWith("-");
+            const sortField = isDescending ? sort.substring(1) : sort;
+            const sortOrder = isDescending ? -1 : 1;
+            if (["price_new", "name"].includes(sortField)) {
+                sortStage = { [sortField]: sortOrder };
+            }
+        }
+
+        const booksQuery = [
+            { $match: matchStage },
             {
                 $addFields: {
                     discount: {
@@ -199,49 +209,73 @@ const getFlashSaleBooksService = async ({ current, pageSize, all }) => {
                     }
                 }
             },
-            { $sort: { discount: -1 } },
+            { $sort: sortStage },
         ];
 
-        if (!all) {
-            booksQuery.push({ $limit: 10 });
+        if (all) {
+            booksQuery.push({ $skip: offset }, { $limit: limit });
         } else {
-            booksQuery.push({ $skip: offset }, { $limit: pageSize });
+            booksQuery.push({ $limit: 10 });
         }
 
-        let result = await bookModel.aggregate(booksQuery);
+        const result = await bookModel.aggregate(booksQuery);
+
+        if (!all) {
+            return { result };
+        }
 
         let totalBooks = 0;
         if (all) {
-            totalBooks = await bookModel.countDocuments({ price_new: { $gt: 0 }, price_old: { $gt: 0 } });
+            totalBooks = await bookModel.countDocuments(matchStage);
         }
 
         return {
             result,
-            meta: all ? {
-                current: current,
-                pageSize: pageSize,
+            meta: {
+                page,
+                limit,
                 total: totalBooks,
-                pages: Math.ceil(totalBooks / pageSize)
-            } : null
+                pages: Math.ceil(totalBooks / limit)
+            }
         };
     } catch (error) {
         throw new Error(error.message);
     }
 };
 
-const getBooksByGenreService = async (id_genre, id) => {
+const getBooksByGenreService = async (id_genre, id, authorIds) => {
     try {
-        const query = { id_genre };
+        
+        const genreBooksQuery = { id_genre };
         if (id) {
-            query._id = { $ne: id };
+            genreBooksQuery._id = { $ne: id }; 
         }
-        const result = await bookModel
-            .find(query)
+        const genreBooks = await bookModel
+            .find(genreBooksQuery)
             .sort({ createdAt: -1 })
-            .limit(10);
-        return result;
+            .limit(5);  
+
+        
+        const authorBooksPromises = authorIds.map(async (authorId) => {
+            const authorBooksQuery = { authors: authorId }; 
+            if (id) {
+                authorBooksQuery._id = { $ne: id };  
+            }
+            return bookModel
+                .find(authorBooksQuery)
+                .sort({ createdAt: -1 })
+                .limit(5);  
+        });
+
+        
+        const authorBooks = await Promise.all(authorBooksPromises);
+
+        
+        const allBooks = [...genreBooks, ...authorBooks.flat()];
+
+        return allBooks;  
     } catch (error) {
-        console.error("Error in getBooksByGenreService:", error);
+        console.error("Error in getBooksByGenreAndAuthorsService:", error);
         throw new Error("Lỗi lấy danh sách sách liên quan");
     }
 };
@@ -258,7 +292,7 @@ const getNewBooksService = async ({ page, limit, all, id_genre, sort }) => {
         }
 
         // Bước 2: Xác định kiểu sắp xếp
-        let sortStage = { createdAt: -1 }; // Mặc định sắp xếp theo ngày tạo
+        let sortStage = { createdAt: -1 };
         if (sort) {
             const isDescending = sort.startsWith("-");
             const sortField = isDescending ? sort.substring(1) : sort;
@@ -526,5 +560,5 @@ module.exports = {
     getDeletedBooksService,
     restoreDeletedBookService,
     getTrendingProductsService,
-    updateBookQuantityService
+    updateBookQuantityService,
 }

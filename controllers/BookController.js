@@ -11,7 +11,7 @@ const {
     getDeletedBooksService,
     restoreDeletedBookService,
     getTrendingProductsService,
-    updateBookQuantityService
+    updateBookQuantityService,
 
 } = require('../services/BookServices')
 
@@ -78,7 +78,6 @@ const getBookByIdAPI = async (req, res) => {
 
 const postCreateBook = async (req, res) => {
     try {
-        // Kiểm tra nếu không có body
         if (!req.body) {
             return res.status(400).json({
                 statusCode: 400,
@@ -243,15 +242,24 @@ const deleteABook = async (req, res) => {
 
 const getFlashSaleBooks = async (req, res) => {
     try {
-        const { current, pageSize, all } = req.query;
+        const { page, limit, all, id_genre, sort } = req.query;
+        const { result, meta } = await getFlashSaleBooksService({ page, limit, all, id_genre, sort });
 
-        const { result, meta } = await getFlashSaleBooksService({ current, pageSize, all });
+        if (!all) {
+            return res.status(200).json({
+                statusCode: 200,
+                message: "Danh sách sách giảm giá",
+                data: result
+            });
+        }
 
         return res.status(200).json({
             statusCode: 200,
             message: "Lấy danh sách sách giảm giá thành công!",
-            meta,
-            data: result
+            data: {
+                meta,
+                result
+            }
         });
     } catch (error) {
         console.error("Lỗi khi lấy danh sách flash sale:", error);
@@ -263,10 +271,14 @@ const getFlashSaleBooks = async (req, res) => {
     }
 };
 
+
+
 const getBooksByGenreAPI = async (req, res) => {
     try {
         const id = req.params.id;
         const id_genre = req.params.id_genre;
+        const authorIds = req.params.authorIds.split(','); // Giả sử bạn gửi nhiều authorIds, ví dụ: "authorId1,authorId2"
+
         if (!id_genre || !/^[0-9a-fA-F]{24}$/.test(id_genre)) {
             return res.status(400).json({
                 message: "id_genre không hợp lệ",
@@ -275,12 +287,13 @@ const getBooksByGenreAPI = async (req, res) => {
             });
         }
 
-        const result = await getBooksByGenreService(id_genre, id);
+        
+        const result = await getBooksByGenreService(id_genre, id, authorIds);
 
         return res.status(200).json({
             message: "Lấy danh sách sách liên quan thành công",
             statusCode: 200,
-            data: result
+            data: result  
         });
     } catch (error) {
         console.error("Error fetching related books:", error);
@@ -291,6 +304,8 @@ const getBooksByGenreAPI = async (req, res) => {
         });
     }
 };
+
+
 
 const getNewBooksAPI = async (req, res) => {
     try {

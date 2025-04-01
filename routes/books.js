@@ -24,7 +24,7 @@ router.get('/book/flash-sale', getFlashSaleBooks);
 router.get('/book/trending', getTrendingBooks);
 router.get('/book/new', getNewBooksAPI);
 router.get('/book/search', searchBooksAPI);
-router.get('/book/:id/genre/:id_genre', getBooksByGenreAPI);
+router.get('/book/:id/genre/:id_genre/author/:authorIds', getBooksByGenreAPI);
 router.put('/book/:id', putUpdateBook);
 router.put('/book/update-quantity/:bookId', updateBookQuantityAPI);
 router.delete('/book/:id', deleteABook);
