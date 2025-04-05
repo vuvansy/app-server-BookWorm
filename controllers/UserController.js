@@ -7,7 +7,7 @@ const { getAllUserService, createUserService,
     loginUserService, getUserByTokenService,
     updateUserService, blockUserService, deleteUserService,
     forgotPasswordService, resetPasswordService, changePasswordService,
-    createArrayUserService
+    createArrayUserService, handleSocialMediaLoginService
 } = require('../services/UserServices')
 
 
@@ -200,6 +200,7 @@ const loginUserAPI = async (req, res) => {
             statusCode: 200,
             data: {
                 access_token: result.data.access_token,
+                refresh_token: result.data.refresh_token,
                 user: result.data.user
             }
         });
@@ -383,6 +384,24 @@ const changePasswordAPI = async (req, res) => {
     }
 };
 
+const socialMediaLogin = async (req, res) => {
+    const { email, type, fullName } = req.body;
+    try {
+        const loginData = await handleSocialMediaLoginService(email, type, fullName);
+
+        res.status(201).json({
+            statusCode: 201,
+            message: "Fetch tokens for user login with social media account",
+            data: loginData,
+        });
+    } catch (error) {
+        res.status(400).json({
+            statusCode: 400,
+            message: error.message || "An error occurred",
+        });
+    }
+};
+
 //send email
 const transporter = mailer.createTransport({
     pool: true,
@@ -400,6 +419,6 @@ const transporter = mailer.createTransport({
 module.exports = {
     getUsersAPI, postCreateUserAPI, loginUserAPI, getUserAccount, logoutUserAPI,
     updateUserAPI, blockUserAPI, deleteUser, forgotPasswordAPI, resetPasswordAPI,
-    changePasswordAPI, postCreateArrayUser
+    changePasswordAPI, postCreateArrayUser, socialMediaLogin
 }
 

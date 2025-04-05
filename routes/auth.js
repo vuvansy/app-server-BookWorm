@@ -2,7 +2,7 @@ var express = require('express');
 var router = express.Router();
 const authMiddleware = require("../middlewares/authMiddleware");
 const { loginUserAPI, getUserAccount, logoutUserAPI, forgotPasswordAPI,
-    resetPasswordAPI, changePasswordAPI
+    resetPasswordAPI, changePasswordAPI, socialMediaLogin
 } = require('../controllers/UserController')
 
 
@@ -10,6 +10,7 @@ const { loginUserAPI, getUserAccount, logoutUserAPI, forgotPasswordAPI,
 
 router.get('/auth/account', getUserAccount);
 router.post('/auth/login', loginUserAPI);
+router.post('/auth/social-media', socialMediaLogin);
 router.post('/auth/logout', logoutUserAPI);
 router.post('/auth/forgot-password', forgotPasswordAPI);
 router.post('/auth/reset-password', resetPasswordAPI);

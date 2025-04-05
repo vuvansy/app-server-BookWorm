@@ -55,6 +55,9 @@ const createUserService = async (userData) => {
         if (!userData.image) {
             userData.image = "/avatar.jpg";
         }
+        if (!userData.type) {
+            userData.type = "SYSTEM";
+        }
 
         const salt = bcrypt.genSaltSync(10);
         userData.password = bcrypt.hashSync(userData.password, salt);
@@ -66,7 +69,8 @@ const createUserService = async (userData) => {
             role: userData.role,
             address: userData.address,
             image: userData.image,
-            password: userData.password
+            password: userData.password,
+            type: userData.type,
         });
 
         return result;
@@ -177,6 +181,7 @@ const loginUserService = async (email, password) => {
             email: result.email,
             phone: result.phone,
             role: result.role,
+            type: result.type,
             image: result.image || null,
             address: result.address
         };
@@ -204,6 +209,7 @@ const loginUserService = async (email, password) => {
                     email: result.email,
                     phone: result.phone,
                     role: result.role,
+                    type: result.type,
                     image: result.image,
                     address: result.address
                 },
@@ -359,8 +365,67 @@ const createArrayUserService = async (arrUsers) => {
 };
 
 
+const handleSocialMediaLoginService = async (email, type, fullName) => {
+    let user = await userModel.findOne({ email });
+
+    if (!user) {
+        user = await userModel.create({
+            fullName: fullName,
+            email,
+            phone: "",
+            image: "/avatar.jpg",
+            type: type,
+            password: "",
+            role: "USER",
+            isBlocked: false
+        });
+    }
+
+    if (user.isBlocked) {
+        throw new Error("Tài khoản của bạn đã bị khóa, vui lòng liên hệ quản trị viên!");
+    }
+
+    const payload = {
+        id: user._id,
+        fullName: user.fullName,
+        email: user.email,
+        phone: user.phone,
+        address: user.address,
+        type: user.type,
+        role: user.role,
+        isBlocked: user.isBlocked,
+    };
+
+    const access_token = jwt.sign(
+        payload,
+        process.env.ACCESS_TOKEN_SECRET,
+        { expiresIn: process.env.ACCESS_TOKEN_EXPIRES }
+    );
+
+    const refresh_token = jwt.sign(
+        payload,
+        process.env.REFRESH_TOKEN_SECRET,
+        { expiresIn: process.env.REFRESH_TOKEN_EXPIRES }
+    );
+
+    return {
+        access_token,
+        refresh_token,
+        user: {
+            id: user._id,
+            fullName: user.fullName || "",
+            email: user.email,
+            address: user.address || "",
+            type: user.type,
+            role: user.role,
+            isBlocked: user.isBlocked || false,
+        }
+    };
+};
+
+
 module.exports = {
     getAllUserService, createUserService, loginUserService, getUserByTokenService,
     updateUserService, blockUserService, deleteUserService, forgotPasswordService,
-    resetPasswordService, changePasswordService, createArrayUserService
+    resetPasswordService, changePasswordService, createArrayUserService, handleSocialMediaLoginService
 }

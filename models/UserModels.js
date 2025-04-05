@@ -16,8 +16,13 @@ const user = new Schema({
     street: { type: String, default: "" },
   },
   role: { type: String, enum: ["USER", "ADMIN"], default: "USER" },
+  type: { type: String, default: "SYSTEM" },
   isBlocked: { type: Boolean, default: false },
-  password: { type: String, required: true },
+  password: {
+    type: String, required: function () {
+      return this.type === "SYSTEM";
+    }
+  },
   isActive: { type: Boolean, default: false },
   reset_token: { type: String, required: false, default: null },
 
