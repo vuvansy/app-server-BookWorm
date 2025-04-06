@@ -394,7 +394,7 @@ const handleSocialMediaLoginService = async (email, type, fullName) => {
         type: user.type,
         role: user.role,
         isBlocked: user.isBlocked,
-        image: result.image,
+        image: user.image,
     };
 
     const access_token = jwt.sign(
@@ -420,6 +420,7 @@ const handleSocialMediaLoginService = async (email, type, fullName) => {
             type: user.type,
             role: user.role,
             isBlocked: user.isBlocked || false,
+            image: user.image,
         }
     };
 };
