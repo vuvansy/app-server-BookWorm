@@ -7,7 +7,7 @@ const { getAllUserService, createUserService,
     loginUserService, getUserByTokenService,
     updateUserService, blockUserService, deleteUserService,
     forgotPasswordService, resetPasswordService, changePasswordService,
-    createArrayUserService, handleSocialMediaLoginService
+    createArrayUserService, handleSocialMediaLoginService, getUserByIdService
 } = require('../services/UserServices')
 
 
@@ -402,6 +402,33 @@ const socialMediaLogin = async (req, res) => {
     }
 };
 
+
+const getUserByIdAPI = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const result = await getUserByIdService(id);
+
+        if (result.error) {
+            return res.status(404).json({
+                statusCode: 404,
+                message: result.error,
+            });
+        }
+
+        return res.status(200).json({
+            statusCode: 200,
+            message: "Lấy thông tin người dùng thành công!",
+            data: result.data,
+        });
+    } catch (error) {
+        return res.status(500).json({
+            statusCode: 500,
+            message: "Lỗi máy chủ!",
+            error: error.message,
+        });
+    }
+};
+
 //send email
 const transporter = mailer.createTransport({
     pool: true,
@@ -419,6 +446,6 @@ const transporter = mailer.createTransport({
 module.exports = {
     getUsersAPI, postCreateUserAPI, loginUserAPI, getUserAccount, logoutUserAPI,
     updateUserAPI, blockUserAPI, deleteUser, forgotPasswordAPI, resetPasswordAPI,
-    changePasswordAPI, postCreateArrayUser, socialMediaLogin
+    changePasswordAPI, postCreateArrayUser, socialMediaLogin, getUserByIdAPI
 }
 

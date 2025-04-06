@@ -394,6 +394,7 @@ const handleSocialMediaLoginService = async (email, type, fullName) => {
         type: user.type,
         role: user.role,
         isBlocked: user.isBlocked,
+        image: result.image,
     };
 
     const access_token = jwt.sign(
@@ -423,9 +424,24 @@ const handleSocialMediaLoginService = async (email, type, fullName) => {
     };
 };
 
+const getUserByIdService = async (id) => {
+    try {
+        const user = await userModel.findById(id).select("-password"); // Ẩn mật khẩu
+
+        if (!user) {
+            return { error: "Người dùng không tồn tại!" };
+        }
+
+        return { data: user };
+    } catch (error) {
+        console.error("Lỗi khi lấy thông tin người dùng:", error.message);
+        throw new Error(error.message);
+    }
+};
+
 
 module.exports = {
     getAllUserService, createUserService, loginUserService, getUserByTokenService,
     updateUserService, blockUserService, deleteUserService, forgotPasswordService,
-    resetPasswordService, changePasswordService, createArrayUserService, handleSocialMediaLoginService
+    resetPasswordService, changePasswordService, createArrayUserService, handleSocialMediaLoginService, getUserByIdService
 }
