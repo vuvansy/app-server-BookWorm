@@ -1,7 +1,7 @@
 const {
     createOrderService, getOrdersByUserService, getOrderDetailByIdService,
     updateOrderStatusService, updateOrderPaymentStatusService,
-    getOrdersService
+    getOrdersService, getOrderByIdService
 } = require('../services/OrderServices')
 
 const getOrdersAPI = async (req, res) => {
@@ -71,7 +71,6 @@ const getOrdersByUser = async (req, res) => {
         });
     }
 };
-
 
 
 const getOrderDetailById = async (req, res) => {
@@ -162,8 +161,36 @@ const updateOrderPaymentStatus = async (req, res) => {
 };
 
 
+const getOrderById = async (req, res) => {
+    try {
+        const { id_user, id_order } = req.body;
+
+        if (!id_user || !id_order) {
+            return res.status(400).json({ message: "Thiếu ID người dùng hoặc ID đơn hàng!" });
+        }
+
+        const result = await getOrderByIdService(id_user, id_order);
+
+        if (!result.success) {
+            return res.status(404).json({ message: result.message });
+        }
+
+        return res.status(200).json({
+            statusCode: 200,
+            message: "Lấy chi tiết đơn hàng thành công!",
+            data: result.data,
+        });
+    } catch (error) {
+        return res.status(500).json({
+            message: "Lỗi hệ thống khi lấy chi tiết đơn hàng",
+            error: error.message,
+        });
+    }
+};
+
+
 
 module.exports = {
     postCreateOrder, getOrdersByUser, getOrderDetailById,
-    updateOrderStatus, updateOrderPaymentStatus, getOrdersAPI
+    updateOrderStatus, updateOrderPaymentStatus, getOrdersAPI, getOrderById
 }

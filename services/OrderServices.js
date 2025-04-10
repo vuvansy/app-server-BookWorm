@@ -358,6 +358,46 @@ const updateOrderPaymentStatusService = async (orderId, isPaid) => {
 };
 
 
+const getOrderByIdService = async (id_user, id_order) => {
+    try {
+        if (!mongoose.Types.ObjectId.isValid(id_order)) {
+            return {
+                success: false,
+                message: "Mã đơn hàng không hợp lệ!",
+            };
+        }
+
+        const userId = new mongoose.Types.ObjectId(id_user);
+        const orderId = new mongoose.Types.ObjectId(id_order);
+
+        const order = await orderModel
+            .findOne({ _id: orderId, id_user: userId })
+            .populate("id_payment")
+            .populate("id_delivery");
+
+        if (!order) {
+            return {
+                success: false,
+                message: "Không tìm thấy đơn hàng hoặc bạn không có quyền truy cập!",
+            };
+        }
+
+        return {
+            success: true,
+            data: order,
+        };
+    } catch (error) {
+        console.log("Error >>>", error);
+        return {
+            success: false,
+            message: "Lỗi hệ thống khi lấy đơn hàng",
+            error: error.message,
+        };
+    }
+};
+
+
+
 
 // Hàm gửi email xác nhận đơn hàng
 const sendOrderConfirmationEmail = async (email, order) => {
@@ -432,5 +472,5 @@ const transporter = mailer.createTransport({
 module.exports = {
     createOrderService, getOrdersByUserService,
     getOrderDetailByIdService, updateOrderStatusService,
-    updateOrderPaymentStatusService, getOrdersService
+    updateOrderPaymentStatusService, getOrdersService, getOrderByIdService
 }
