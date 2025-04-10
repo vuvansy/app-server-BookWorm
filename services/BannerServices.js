@@ -51,6 +51,44 @@ const getAllBannerService = async (limit, page, name, queryString) => {
     }
 };
 
+const putUpdateBannerService = async (id, name, image, status) => {
+    try {
+        const banner = await bannerModel.findById(id);
+        if (!banner) {
+            return null;
+        }
+
+        banner.name = name ?? banner.name;
+        banner.image = image ?? banner.image;
+        banner.status = typeof status === "boolean" ? status : banner.status;
+
+        await banner.save();
+        return banner;
+    } catch (error) {
+        console.log("Service error >>>", error);
+        return null;
+    }
+};
+
+const deleteABannerService = async (id) => {
+    try {
+        //Không xóa mềm
+        const result = await bannerModel.findByIdAndDelete(id);
+
+        if (!result) {
+            throw new Error("Banner không tồn tại hoặc không thể xóa.");
+        }
+
+        return result;
+    } catch (error) {
+        console.error("Lỗi trong deleteABannerService:", error);
+        throw error;
+    }
+};
+
+
+
+
 module.exports = {
-    createBannerService, getAllBannerService
+    createBannerService, getAllBannerService, putUpdateBannerService, deleteABannerService
 }
