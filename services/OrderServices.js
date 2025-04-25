@@ -18,6 +18,17 @@ const getOrdersService = async (limit, page, status, queryString) => {
 
         delete queryFilter.page;
 
+         filter = { ...filter, ...queryFilter };
+
+         if (queryFilter.id) {
+             try {
+                 filter._id = new mongoose.Types.ObjectId(queryFilter.id);
+             } catch (error) {
+                 console.log("ID không hợp lệ:", queryFilter.id);
+             }
+             delete filter.id;
+         }
+
         if (status) {
             filter.status = status;
         }
