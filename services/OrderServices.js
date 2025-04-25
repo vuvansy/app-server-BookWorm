@@ -433,7 +433,7 @@ const sendOrderConfirmationEmail = async (email, order) => {
                 <p><strong>Mã đơn hàng:</strong> ${order._id}</p>
                 <p><strong>Phương thức thanh toán:</strong> ${order.id_payment.name}</p>
                 <p><strong>Phương thức vận chuyển:</strong> ${order.id_delivery.name}</p>
-                <p><strong>Tổng tiền:</strong> ${(order.order_total - order.discountAmount + order.shippingPrice).toLocaleString()} VND</p>
+                <p><strong>Tổng tiền:</strong> ${(order.order_total + order.shippingPrice).toLocaleString()} VND</p>
                 <p><strong>Trạng thái đơn hàng:</strong> ${statusMap[order.status] || "Không xác định"}</p>
                 <p><strong>Thanh toán:</strong> ${order.isPaid ? "Đã thanh toán" : "Chưa thanh toán"}</p>
                 <hr>
